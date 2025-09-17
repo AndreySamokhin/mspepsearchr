@@ -1,0 +1,24 @@
+Type: Package
+Package: mspepsearchr
+Title: Batch Mass Spectral Library Searches Using the MSPepSearch (NIST) Tool
+Version: 0.1.0
+Authors@R: person("Andrey", "Samokhin", , "andrey.s.samokhin@gmail.com",
+                  role = c("aut", "cre", "cph"),
+                  comment = c(ORCID = "0000-0003-0223-6087"))
+Description: A convenient interface to perform batch searches of mass spectral
+    data against NIST-format databases using the MSPepSearch tool developed by
+    NIST. An R function automatically constructs search commands, calls the
+    MSPepSearch executable, parses the output, and represents the library search
+    results as an R object.
+License: MIT + file LICENSE
+URL: https://mass-spec.ru/projects/gcmsdata/mspepsearchr/eng/
+BugReports: https://github.com/AndreySamokhin/mspepsearchr/issues
+Encoding: UTF-8
+LazyData: true
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+RoxygenNote: 7.3.2
+Imports: 
+    mssearchr,
+    utils

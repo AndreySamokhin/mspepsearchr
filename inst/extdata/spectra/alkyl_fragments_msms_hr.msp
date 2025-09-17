@@ -1,0 +1,199 @@
+name: Dodecylamine
+db#: MSBNK-BAFG-CSL2311109949
+inchikey: JRBPAEWTRLWTQC-UHFFFAOYSA-N
+inchi: InChI=1S/C12H27N/c1-2-3-4-5-6-7-8-9-10-11-12-13/h2-13H2,1H3
+smiles: CCCCCCCCCCCCN
+precursor_type: [M+H]+
+spectrum_type: MS2
+precursormz: 186.2216
+instrument_type: LC-ESI-QTOF
+instrument: TripleTOF 5600 SCIEX
+ion_mode: POSITIVE
+collision_energy: 40
+formula: C12H27N
+mw: 185
+exactmass: 185.2143
+comments: Parent=186.2216
+splash: splash10-052f-9000000000-2bc482dea7b25afd4c73
+library: MassBank 2023.11
+notes: MSBNK-BAFG-CSL2311109949
+num peaks: 8
+39.0229 146
+41.0384 683
+43.0541 876
+55.0541 53
+57.0698 999
+71.0854 299
+85.1005 61
+186.2236 69
+
+name: Octylamine
+synon: Monoctylamine
+synon: N-Octylamine
+db#: MSBNK-Keio_Univ-KO003644
+inchikey: IOQPZZOEVPZRBK-UHFFFAOYSA-N
+inchi: InChI=1S/C8H19N/c1-2-3-4-5-6-7-8-9/h2-9H2,1H3
+smiles: CCCCCCCCN
+precursor_type: [M+H]+
+spectrum_type: MS2
+precursormz: 130
+instrument_type: LC-ESI-QQ
+instrument: API3000, Applied Biosystems
+ion_mode: POSITIVE
+collision_energy: 30 V
+formula: C8H19N
+mw: 129
+exactmass: 129.15175
+comments: Parent=130
+splash: splash10-052f-9000000000-8d3a31ba54947168b007
+library: MassBank 2023.11
+notes: MSBNK-Keio_Univ-KO003644
+num peaks: 14
+41.2 353
+43 999
+45.3 8
+55.2 54
+56.2 5
+57.3 806
+64.9 7
+67 36
+69.9 18
+71 176
+84.3 15
+102.6 7
+112.9 12
+130 10
+
+name: Tridemorph
+db#: MSBNK-BAFG-CSL2311109469
+inchikey: YTOPFCCWCSOHFV-UHFFFAOYSA-N
+inchi: InChI=1S/C19H39NO/c1-4-5-6-7-8-9-10-11-12-13-14-15-20-16-18(2)21-19(3)17-20/h18-19H,4-17H2,1-3H3
+smiles: CCCCCCCCCCCCCN1CC(OC(C1)C)C
+precursor_type: [M+H]+
+spectrum_type: MS2
+precursormz: 298.3104
+instrument_type: LC-ESI-QTOF
+instrument: TripleTOF 5600 SCIEX
+ion_mode: POSITIVE
+collision_energy: 60
+formula: C19H39NO
+mw: 297
+exactmass: 297.3032
+comments: Parent=298.3104
+splash: splash10-052f-9000000000-ba24fc70cc76d6c76a35
+library: MassBank 2023.11
+notes: MSBNK-BAFG-CSL2311109469
+num peaks: 10
+39.0223 374
+41.0382 832
+43.0543 874
+56.0491 208
+57.0694 999
+58.0632 249
+59.0489 166
+70.0653 416
+71.0845 291
+98.096 749
+
+name: Silafluofen
+db#: MSBNK-MSSJ-MSJ02334
+inchikey: HPYNBECUCCGGPA-UHFFFAOYSA-N
+inchi: InChI=1S/C25H29FO2Si/c1-4-27-21-13-15-23(16-14-21)29(2,3)18-8-9-20-12-17-24(26)25(19-20)28-22-10-6-5-7-11-22/h5-7,10-17,19H,4,8-9,18H2,1-3H3
+smiles: CCOc1ccc([Si](C)(C)CCCc2ccc(F)c(Oc3ccccc3)c2)cc1
+precursor_type: [M+NH4]+
+spectrum_type: MS2
+precursormz: 426.22591
+instrument_type: LC-ESI-QTOF
+instrument: ExionLC AD, AB Sciex LLC, USA; X500R QTOF, AB Sciex LLC, USA.
+ion_mode: POSITIVE
+collision_energy: 60 V
+formula: C25H29FO2Si
+mw: 408
+exactmass: 408.19208
+comments: Parent=426.22591
+splash: splash10-0006-9000000000-8dc34bdfeb1420279db4
+library: MassBank 2023.11
+notes: MSBNK-MSSJ-MSJ02334
+num peaks: 14
+30.034 36
+31.0181 46
+33.0339 61
+39.0234 277
+41.039 999
+42.0344 96
+43.0545 942
+55.0547 74
+56.0502 75
+57.0704 448
+58.0655 87
+59.0498 84
+70.0657 121
+98.0971 192
+
+name: Pantothenic acid
+db#: MSBNK-EPA-ENTACT_AGILENT001293
+inchikey: GHOKWGTUZJEAQD-UHFFFAOYSA-N
+inchi: InChI=1S/C9H17NO5/c1-9(2,5-11)7(14)8(15)10-4-3-6(12)13/h7,11,14H,3-5H2,1-2H3,(H,10,15)(H,12,13)
+smiles: CC(C)(CO)C(O)C(=O)NCCC(O)=O
+precursor_type: [M+H]+
+spectrum_type: MS2
+precursormz: 220.1179491129
+instrument_type: ESI-QTOF
+instrument: N/A
+ion_mode: POSITIVE
+collision_energy: 40
+formula: C9H17NO5
+mw: 219
+exactmass: 219.1106726612
+comments: Parent=220.1179491129
+splash: splash10-052f-9000000000-8297c94e9c52f215785f
+library: MassBank 2023.11
+notes: MSBNK-EPA-ENTACT_AGILENT001293
+num peaks: 46
+29.038577 18
+30.033826 217
+31.017841 13
+39.022927 31
+41.038577 816
+41.059706 17
+42.033826 283
+43.017841 999
+43.041651 20
+43.054227 39
+44.997106 18
+45.033491 204
+47.012756 18
+53.038577 22
+54.033826 12
+55.017841 185
+55.054227 231
+56.01309 472
+57.033491 34
+57.069877 403
+59.049141 134
+61.028406 32
+65.038577 65
+67.054227 593
+69.069877 60
+69.992355 18
+70.02874 970
+70.062446 26
+70.077702 13
+72.04439 185
+73.028406 61
+74.023655 36
+77.038577 13
+79.054227 62
+80.049476 16
+81.057301 51
+81.069877 34
+82.065126 18
+83.049141 60
+85.064791 76
+90.054955 76
+94.062446 12
+95.049141 129
+96.080776 73
+98.023655 99
+124.07569 62
+

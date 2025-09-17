@@ -1,0 +1,7 @@
+> MSPepSearch ver. 0.9.7.1 build Fri Mar 15 13:11:23 2024. Started xx/xx/xx at xx:xx:xx. Command line:
+> ...
+>
+Unknown	Rank	Library	MF	R.Match	Prob(%)	PSS.Match	RI	Name
+Dummy	
+>
+> Completed. ...
