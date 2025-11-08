@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Andrey Samokhin" />
+
+<meta name="date" content="2025-11-08" />
+
+<title>Introduction to mspepsearchr</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {background-color: #fff;margin: 1em auto;max-width: 700px;overflow: visible;padding-left: 2em;padding-right: 2em;font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;font-size: 14px;line-height: 1.35;}#TOC {clear: both;margin: 0 0 10px 10px;padding: 4px;width: 400px;border: 1px solid #CCCCCC;border-radius: 5px;background-color: #f6f6f6;font-size: 13px;line-height: 1.3;}#TOC .toctitle {font-weight: bold;font-size: 15px;margin-left: 5px;}#TOC ul {padding-left: 40px;margin-left: -1.5em;margin-top: 5px;margin-bottom: 5px;}#TOC ul ul {margin-left: -2em;}#TOC li {line-height: 16px;}table {margin: 1em auto;border-width: 1px;border-color: #DDDDDD;border-style: outset;border-collapse: collapse;}table th {border-width: 2px;padding: 5px;border-style: inset;}table td {border-width: 1px;border-style: inset;line-height: 18px;padding: 5px 5px;}table, table th, table td {border-left-style: none;border-right-style: none;}table thead, table tr.even {background-color: #f7f7f7;}p {margin: 0.5em 0;text-align: justify;}blockquote {background-color: #f6f6f6;padding: 0.25em 0.75em;}hr {border-style: solid;border: none;border-top: 1px solid #777;margin: 28px 0;}dl {margin-left: 0;}dl dd {margin-bottom: 13px;margin-left: 13px;}dl dt {font-weight: bold;}ul {margin-top: 0;}ul li {list-style: circle outside;}ul ul {margin-bottom: 0;}pre, code {background-color: #f7f7f7;border-radius: 3px;color: #333;white-space: pre-wrap; }pre {border-radius: 3px;margin: 5px 0px 10px 0px;padding: 10px;}pre:not([class]) {background-color: #f7f7f7;}code {font-family: Consolas, Monaco, 'Courier New', monospace;font-size: 85%;}p > code, li > code {padding: 2px 0px;}div.figure p.caption {text-align: center;}img {background-color: #FFFFFF;padding: 2px;border: 1px solid #DDDDDD;border-radius: 3px;border: 1px solid #CCCCCC;margin: 0 5px;}div.figure img {border: none;background: none;padding: 0;}h1 {margin-top: 0;font-size: 35px;line-height: 40px;}h2 {border-bottom: 4px solid #f7f7f7;padding-top: 10px;padding-bottom: 2px;font-size: 145%;}h3 {border-bottom: 2px solid #f7f7f7;padding-top: 10px;font-size: 120%;}h4 {border-bottom: 1px solid #f7f7f7;margin-left: 8px;font-size: 105%;}h5, h6 {border-bottom: 1px solid #ccc;font-size: 105%;}a {color: #0033dd;text-decoration: none;}a:hover {color: #6666ff; }a:visited {color: #800080; }a:visited:hover {color: #BB00BB; }a[href^="http:"] {text-decoration: underline; }a[href^="https:"] {text-decoration: underline; }code > span.kw { color: #555; font-weight: bold; } code > span.dt { color: #902000; } code > span.dv { color: #40a070; } code > span.bn { color: #d14; } code > span.fl { color: #d14; } code > span.ch { color: #d14; } code > span.st { color: #d14; } code > span.co { color: #888888; font-style: italic; } code > span.ot { color: #007020; } code > span.al { color: #ff0000; font-weight: bold; } code > span.fu { color: #900; font-weight: bold; } code > span.er { color: #a61717; background-color: #e3d2d2; } </style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Introduction to mspepsearchr</h1>
+<h4 class="author">Andrey Samokhin</h4>
+<h4 class="date">2025-11-08</h4>
+
+
+
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<div id="the-mspepsearch-tool" class="section level3">
+<h3>The MSPepSearch tool</h3>
+<p>MSPepSearch is a command-line interface (CLI) tool developed by NIST.
+It allows users to perform batch library searches against mass spectral
+libraries in NIST format. However, its usage can be challenging, since
+the CLI command may be long and contain more than a dozen flags, as
+demonstrated below.</p>
+<pre><code># Example command that performs library searches for all mass spectra in
+# &#39;test.msp&#39; against the &#39;mainlib&#39; and &#39;replib&#39; sub-libraries using the
+# &#39;Identity EI Normal&#39; algorithm. Results are written to
+# &#39;library_search_results.tsv&#39;. For each candidate, additional information such
+# as molecular weight, CAS numbers, molecular formula, etc. is included.
+
+&lt;path&gt;\MSPepSearch64.exe \
+Id \
+/MAIN &lt;path&gt;\NIST23\MSSEARCH\mainlib \
+/REPL &lt;path&gt;\NIST23\MSSEARCH\replib \
+/INP &lt;path&gt;\test.msp \
+/OUTTAB &lt;path&gt;\library_search_results.tsv \
+/HITS 100 \
+/All \
+/OutRevMF \
+/OutMW \
+/OutCAS \
+/OutChemForm \
+/OutIK</code></pre>
+<p>Search algorithms and options (e.g., presearch) are typically encoded
+as single letters, either uppercase or lowercase, which makes preparing
+commands manually error-prone. In the example above, <code>I</code>
+corresponds to the ‘Identity EI Normal’ algorithm, and <code>d</code>
+represents the ‘Default Presearch’.</p>
+<p>MSPepSearch outputs results in a tab-separated values (TSV) format.
+While R provides convenient tools for reading such tables, additional
+processing is required to extract individual hit lists, since all
+results are merged into a single file and must be separated
+programmatically.</p>
+</div>
+<div id="the-mspepsearchr-package" class="section level3">
+<h3>The <code>mspepsearchr</code> package</h3>
+<p>The <code>mspepsearchr</code> package provides an R interface to the
+MSPepSearch tool. It was developed to overcome the practical limitations
+described above and to make MSPepSearch fully accessible from within R.
+All major search options can be specified directly via R function
+arguments. Less commonly used options (not yet available as dedicated
+arguments) can be provided manually through the
+<code>addl_cli_args</code> parameter, which is available in all relevant
+functions.</p>
+<p>The MSPepSearch executables are included with this package, in
+compliance with NIST’s distribution policy. While including executables
+in an R package is uncommon, this design provides two key benefits:
+improved user convenience (no manual installation required) and
+automated testing support, ensuring reliable and reproducible
+performance across platforms.</p>
+<p>The package is available for Windows, Linux, and macOS. On Linux and
+macOS, Wine must be installed and accessible via the system
+<code>$PATH</code> to run the Windows-based MSPepSearch binaries.</p>
+</div>
+</div>
+<div id="library-search-algorithms" class="section level2">
+<h2>Library search algorithms</h2>
+<p>The package provides user-friendly access to all library search
+algorithms available in NIST MS Search software for EI and MS/MS spectra
+of small molecules. Supported algorithms and their corresponding
+functions include:</p>
+<ul>
+<li>Identity EI Normal - <code>IdentitySearchEiNormal()</code></li>
+<li>Identity HighRes NoPrecursor -
+<code>IdentitySearchHighRes()</code></li>
+<li>Identity MS/MS - <code>IdentitySearchMsMs()</code></li>
+<li>Similarity EI Simple - <code>SimilaritySearchEiSimple()</code></li>
+<li>Similarity EI Neutral Loss -
+<code>SimilaritySearchEiNeutralLoss()</code></li>
+<li>Similarity EI Hybrid - <code>SimilaritySearchEiHybrid()</code></li>
+<li>Similarity MS/MS in EI -
+<code>SimilaritySearchMsMsInEi()</code></li>
+<li>Similarity MS/MS Hybrid -
+<code>SimilaritySearchMsmsHybrid()</code></li>
+</ul>
+<p>It is assumed that readers are familiar with the library search
+algorithms provided by NIST. Detailed descriptions of these algorithms
+are available in the package documentation and were adapted from the
+official MS Search help manual. For the most complete and up-to-date
+information, users are encouraged to consult the official NIST
+documentation.</p>
+</div>
+<div id="general-functionality" class="section level2">
+<h2>General functionality</h2>
+<p>The general functionality is illustrated here using the ‘Identity EI
+Normal’ algorithm. The main principles are identical for other
+algorithms.</p>
+<p>Assume that raw GC/MS data have been processed, and pure mass spectra
+of all components have been extracted either manually (e.g., via
+background subtraction) or automatically (e.g., with AMDIS, MZmine, or
+ChromaTOF). The resulting spectra are saved in an MSP file. The path to
+this file can be specified as either an absolute or relative path (the
+latter is convenient when the spectra are in the same directory as the R
+script).</p>
+<p>To use MSPepSearch, the mass spectral databases must be in NIST
+format. Commercial databases are typically supplied in the correct
+format along with the NIST MS Search software. For example, the NIST EI
+mass spectral library is divided into two sub-libraries
+(<em>mainlib</em> and <em>replib</em>) <code>located</code> inside the
+<em>MSSEARCH/</em> directory. The default installation path is typically
+<em>C:/NISTxx/MSSEARCH/</em> (where <code>xx</code> is the version of
+the NIST database). Therefore, to search against both <em>mainlib</em>
+and <em>replib</em> sub-libraries of NIST23, the <code>libraries</code>
+argument can be specified as a character vector
+<code>c(&quot;C:/NIST23/MSSEARCH/mainlib/&quot;, &quot;C:/NIST23/MSSEARCH/replib/&quot;)</code>.</p>
+<p>Most open-source mass spectral libraries, are distributed as MSP
+files. In such cases, the library must first be converted to NIST format
+using MS Search software or the Lib2NIST Converter tool. In the
+following example, a subset of the Mass Bank database (already converted
+to NIST format) is used. To perform a library search with default
+settings, the <code>spectra</code> and <code>libraries</code> arguments
+must be provided.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>alkanes    <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;spectra&quot;</span>, <span class="st">&quot;alkanes_ei_lr.msp&quot;</span>,</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>                             <span class="at">package =</span> <span class="st">&quot;mspepsearchr&quot;</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>eims_lib <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;libraries&quot;</span>, <span class="st">&quot;massbank_subset_ei_lr_with_ri&quot;</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>                        <span class="at">package =</span> <span class="st">&quot;mspepsearchr&quot;</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>hitlists   <span class="ot">&lt;-</span> <span class="fu">IdentitySearchEiNormal</span>(alkanes, eims_lib)</span></code></pre></div>
+<p>The resulting object (<code>hitlists</code>) is a list of data
+frames. Each data frame represents the hit list obtained for a specific
+mass spectrum. The order of spectra in the MSP file and in
+<code>hitlists</code> is identical, allowing indexing to access specific
+hit list.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>col_names <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;name&quot;</span>, <span class="st">&quot;mf&quot;</span>, <span class="st">&quot;rmf&quot;</span>, <span class="st">&quot;prob&quot;</span>, <span class="st">&quot;formula&quot;</span>, <span class="st">&quot;mw&quot;</span>, <span class="st">&quot;inchikey&quot;</span>, <span class="st">&quot;cas&quot;</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">head</span>(hitlists[[<span class="dv">4</span><span class="dt">L</span>]][, col_names], <span class="dv">3</span><span class="dt">L</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt;          name  mf rmf prob formula  mw                    inchikey cas</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#&gt; 1 TETRADECANE 904 921 54.6  C14H30 198 BGHCVCJVXZWKCC-UHFFFAOYSA-N   0</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt; 2   TRIDECANE 877 904 24.1  C13H28 184 IIYFAKIEWZDVMP-UHFFFAOYSA-N   0</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt; 3    DODECANE 859 905 14.0  C12H26 170 SNRUBQQJIBEYMU-UHFFFAOYSA-N   0</span></span></code></pre></div>
+<p>The name of each mass spectrum is stored as the
+<code>unknown_name</code> attribute of the corresponding hit list. This
+can be used to extract results for a specific compound.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>unknown_names <span class="ot">&lt;-</span> <span class="fu">vapply</span>(hitlists, attr, <span class="at">which =</span> <span class="st">&quot;unknown_name&quot;</span>, <span class="fu">character</span>(<span class="dv">1</span><span class="dt">L</span>))</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>idx <span class="ot">&lt;-</span> <span class="fu">which</span>(unknown_names <span class="sc">==</span> <span class="st">&quot;Dodecane&quot;</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="fu">head</span>(hitlists[[idx]][, col_names], <span class="dv">3</span><span class="dt">L</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt;        name  mf rmf prob formula  mw                    inchikey cas</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt; 1 TRIDECANE 893 917 35.2  C13H28 184 IIYFAKIEWZDVMP-UHFFFAOYSA-N   0</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; 2  DODECANE 891 928 33.3  C12H26 170 SNRUBQQJIBEYMU-UHFFFAOYSA-N   0</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; 3  DODECANE 888 900 33.3  C12H26 170 SNRUBQQJIBEYMU-UHFFFAOYSA-N   0</span></span></code></pre></div>
+</div>
+<div id="integration-into-other-workflows" class="section level2">
+<h2>Integration into other workflows</h2>
+<p>Mass spectra can be provided either as file paths (pointing to MSP or
+MGF files) or directly as R objects. The latter is convenient when
+<code>mspepsearchr</code> is integrated into existing workflows. When
+supplied as R objects, each spectrum is represented as a list containing
+at least:</p>
+<ul>
+<li><code>name</code> - a string containing the compound name or short
+description;</li>
+<li><code>mz</code> - a numeric or integer vector of m/z values;</li>
+<li><code>intst</code> - a numeric or integer vector of corresponding
+peak intensities.</li>
+</ul>
+<p>Additional optional fields should follow MSP format conventions, for
+example, molecular formula (<code>formula</code>), molecular weight
+(<code>mw</code>), exact mass (<code>exactmass</code>), GC retention
+index (<code>retention_index</code>), and precursor ion m/z
+(<code>precursormz</code>).</p>
+<p>Using plain R lists instead of S4 objects simplifies integration with
+other R packages and workflows. Lists are lightweight, easy to
+construct, and can be converted from other data formats without extra
+dependencies.</p>
+<p>The <a href="https://www.bioconductor.org/packages/release/bioc/vignettes/xcms/inst/doc/xcms-lcms-ms.html">LC-MS/MS
+data analysis with xcms</a> vignette provides a detailed example of
+extracting a tandem mass spectrum from LC-MS/MS data. In that vignette,
+a spectrum corresponding to a component with retention time 418.926
+seconds was obtained from <em>PestMix1_DDA.mzML</em>. The example below
+demonstrates how to convert an S4-class <code>Spectra</code> object into
+a format compatible with <code>mspepsearchr</code>.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>ex_spectrum <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">&quot;data/ex_spectrum.rds&quot;</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>data_origin <span class="ot">&lt;-</span> Spectra<span class="sc">::</span><span class="fu">dataOrigin</span>(ex_spectrum)</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>rtime <span class="ot">&lt;-</span> Spectra<span class="sc">::</span><span class="fu">rtime</span>(ex_spectrum)</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>ms_level <span class="ot">&lt;-</span> Spectra<span class="sc">::</span><span class="fu">msLevel</span>(ex_spectrum)</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>precursor_mz <span class="ot">&lt;-</span> Spectra<span class="sc">::</span><span class="fu">precursorMz</span>(ex_spectrum)</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>ion_mode <span class="ot">&lt;-</span> <span class="cf">switch</span>(Spectra<span class="sc">::</span><span class="fu">polarity</span>(ex_spectrum) <span class="sc">+</span> <span class="dv">1</span><span class="dt">L</span>, <span class="st">&quot;NEGATIVE&quot;</span>, <span class="st">&quot;POSITIVE&quot;</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>mz <span class="ot">&lt;-</span> Spectra<span class="sc">::</span><span class="fu">mz</span>(ex_spectrum)</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>intst <span class="ot">&lt;-</span> Spectra<span class="sc">::</span><span class="fu">intensity</span>(ex_spectrum)</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>fenamiphos <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="fu">seq_along</span>(ex_spectrum), <span class="cf">function</span>(i) {</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">name =</span> <span class="fu">paste0</span>(<span class="fu">basename</span>(data_origin[[i]]), <span class="st">&quot;, rt=&quot;</span>, rtime[[i]], <span class="st">&quot;s&quot;</span>),</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>       <span class="at">spectrum_type =</span> <span class="fu">paste0</span>(<span class="st">&quot;MS&quot;</span>, ms_level[[i]]),</span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>       <span class="at">precursormz =</span> precursor_mz[[i]],</span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>       <span class="at">ion_mode =</span> ion_mode[[i]],</span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>       <span class="at">mz =</span> mz[[i]],</span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a>       <span class="at">intst =</span> intst[[i]])</span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a>})</span></code></pre></div>
+<p>For convenience, a pre-converted spectrum is also included in the
+package.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>msp_path <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;spectra&quot;</span>, <span class="st">&quot;fenamiphos_msms_hr.msp&quot;</span>,</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>                        <span class="at">package =</span> <span class="st">&quot;mspepsearchr&quot;</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>fenamiphos <span class="ot">&lt;-</span> mssearchr<span class="sc">::</span><span class="fu">ReadMsp</span>(msp_path)</span></code></pre></div>
+<p>Once converted, the mass spectrum can be searched against a tandem
+mass spectral library.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>msms_lib <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;libraries&quot;</span>, <span class="st">&quot;massbank_subset_msms_hr&quot;</span>,</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>                        <span class="at">package =</span> <span class="st">&quot;mspepsearchr&quot;</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>hitlists <span class="ot">&lt;-</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="fu">IdentitySearchMsMs</span>(fenamiphos, msms_lib,</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>                     <span class="at">precursor_ion_tol  =</span> <span class="fu">list</span>(<span class="at">value =</span> <span class="fl">0.05</span>, <span class="at">utits =</span> <span class="st">&quot;mz&quot;</span>),</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>                     <span class="at">product_ions_tol =</span> <span class="fu">list</span>(<span class="at">value =</span> <span class="fl">0.05</span>, <span class="at">utits =</span> <span class="st">&quot;mz&quot;</span>))</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>col_names <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;name&quot;</span>, <span class="st">&quot;dot&quot;</span>, <span class="st">&quot;rdot&quot;</span>, <span class="st">&quot;formula&quot;</span>, <span class="st">&quot;prec_mz&quot;</span>, <span class="st">&quot;delta_mz&quot;</span>)</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="fu">head</span>(hitlists[[<span class="dv">1</span><span class="dt">L</span>]][, col_names], <span class="dv">3</span><span class="dt">L</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt;              name dot rdot     formula  prec_mz delta_mz</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt; 1      Fenamiphos 876  905 C13H22NO3PS 304.1131  -0.0004</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt; 2 (-)-Scopolamine   1   62   C17H21NO4 304.1543   0.0408</span></span></code></pre></div>
+<p>This approach enables seamless integration into automated workflows,
+allowing direct library searches on spectra extracted from raw GC-MS or
+LC-MS/MS data without the need to write or read intermediate MSP
+files.</p>
+</div>
+<div id="setting-search-parameters-with-command-line-flags" class="section level2">
+<h2>Setting search parameters with command-line flags</h2>
+<p>MSPepSearch offers extensive flexibility for adjusting search
+parameters and controlling the output. These options are implemented
+through a large number of command-line flags. While the most common
+parameters can be controlled via R function arguments, less common
+options can be specified manually through the <code>addl_cli_args</code>
+argument for fine-tuning.</p>
+<p>The official MSPepSearch manual is a plain-text file named
+<em>MSPepSearch64.exe.hlp.txt</em>. It can be accessed directly from R
+using the <code>OpenHelpFile()</code> function, which opens it in the
+default text editor.</p>
+<p>Passing additional flags via the <code>addl_cli_args</code> requires
+caution, as only a minimal check for duplicated flags is performed.
+Several potential issues are not automatically detected:</p>
+<ul>
+<li>the presence of aliases (e.g., <code>v</code> and
+<code>/R.Match</code>);</li>
+<li>specifying tolerance in both m/z (<code>/M</code>) and ppm
+(<code>/MPPM</code>) simultaneously;</li>
+<li>misspelled flag names;</li>
+<li>incorrect sub-flag values;</li>
+<li>incompatible or conflicting flag combinations.</li>
+</ul>
+<p>For example, attempting to manually specify the number of hits with
+<code>/HITS</code> will raise an error, since this option is already
+managed automatically based on <code>n_hits</code>.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>hitlists <span class="ot">&lt;-</span> <span class="fu">IdentitySearchEiNormal</span>(spectra, ms_library,</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>                                   <span class="at">addl_cli_args =</span> <span class="st">&quot;/HITS 10&quot;</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co">#&gt; Error in .PrepareJobs(spectra, libraries, algorithm = &quot;identity_normal&quot;,  : </span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="co">#&gt;   The following CLI flags are duplicated: /HITS</span></span></code></pre></div>
+<p>The use of the <code>addl_cli_args</code> argument is illustrated
+below using retention indices (RI). The <code>ri_column_type</code>
+argument of <code>IdentitySearchEiNormal()</code> allows specifying only
+the stationary phase type. However, MSPepSearch supports additional
+RI-related options. For example, RI mismatches can be used to penalize
+match factors. In the example below, the mass spectrum of tridecane
+lacks low-intensity peaks (including the molecular ion), so the correct
+hit appears only in the third position.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>tridecane <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">name =</span> <span class="st">&quot;Tridecane&quot;</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>       <span class="at">mz =</span> <span class="fu">c</span>(<span class="dv">53</span>, <span class="dv">55</span>, <span class="dv">56</span>, <span class="dv">57</span>, <span class="dv">69</span>, <span class="dv">70</span>, <span class="dv">71</span>, <span class="dv">84</span>, <span class="dv">85</span>),</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>       <span class="at">intst =</span> <span class="fu">c</span>(<span class="dv">51</span>, <span class="dv">314</span>, <span class="dv">220</span>, <span class="dv">999</span>, <span class="dv">110</span>, <span class="dv">126</span>, <span class="dv">526</span>, <span class="dv">54</span>, <span class="dv">274</span>),</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>       <span class="at">retention_index =</span> <span class="dv">1300</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>)</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>hitlists <span class="ot">&lt;-</span> <span class="fu">IdentitySearchEiNormal</span>(tridecane, eims_lib)</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>col_names <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;name&quot;</span>, <span class="st">&quot;mf&quot;</span>, <span class="st">&quot;rmf&quot;</span>, <span class="st">&quot;prob&quot;</span>, <span class="st">&quot;formula&quot;</span>, <span class="st">&quot;mw&quot;</span>, <span class="st">&quot;ri&quot;</span>)</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="fu">head</span>(hitlists[[<span class="dv">1</span><span class="dt">L</span>]][, col_names], <span class="dv">3</span><span class="dt">L</span>)</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a><span class="co">#&gt;        name  mf rmf prob formula  mw   ri</span></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co">#&gt; 1  DODECANE 842 842 39.7  C12H26 170 1200</span></span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="co">#&gt; 2  UNDECANE 829 829 26.9  C11H24 156 1100</span></span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a><span class="co">#&gt; 3 TRIDECANE 819 819 20.1  C13H28 184 1300</span></span></code></pre></div>
+<p>By setting the RI tolerance to 15 i.u. (<code>t15</code>) and
+applying an infinite penalty rate (<code>rIN</code>), all other normal
+alkanes are removed from the hit list, placing tridecane at the top.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>hitlists <span class="ot">&lt;-</span> <span class="fu">IdentitySearchEiNormal</span>(tridecane, eims_lib,</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>                                   <span class="at">addl_cli_args =</span> <span class="st">&quot;/RI nt15rIN&quot;</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="fu">head</span>(hitlists[[<span class="dv">1</span><span class="dt">L</span>]][, col_names], <span class="dv">3</span><span class="dt">L</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="co">#&gt;                     name  mf rmf prob  formula  mw   ri</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="co">#&gt; 1              TRIDECANE 819 819 98.7   C13H28 184 1300</span></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="co">#&gt; 2 DELTA-TETRADECALACTONE 345 345  1.0 C14H26O2 226   NA</span></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="co">#&gt; 3     D-CAMPHOLYLMETHANE 310 310  0.3  C11H20O 168   NA</span></span></code></pre></div>
+</div>
+<div id="external-parallelization" class="section level2">
+<h2>External parallelization</h2>
+<p>MSPepSearch is a single-threaded application. To improve performance,
+external parallelization can be achieved by running multiple independent
+instances of MSPepSearch from within R using the <code>parallel</code>
+package. The <code>n_threads</code> argument specifies how many parallel
+threads to use for library searching.</p>
+<p>Performance improvement is measured as speedup, defined as the ratio
+of single-thread execution time to multi-thread execution time. As
+expected, speedup depends on task complexity. In library searching,
+complexity is mainly determined by the number of mass spectra to search
+and the size of the library. Here, single-thread execution time serves
+as a practical indicator of task complexity.</p>
+<p>As shown in Figure 1, speedup increases monotonically with workload
+size. Library searches were performed using the ‘Identity EI Normal’
+algorithm on an Intel Core i7-4790K with four threads. For simple tasks,
+the overhead of parallelization dominates. Moderate tasks achieved
+speedups in the range of 2-3, while computationally demanding tasks,
+requiring several minutes on a single core, reached a the maximum
+speedup of approximately 3.4.</p>
+<div class="figure" style="text-align: center">
+<img role="img" aria-label="Figure 1. Speedup obtained for various library search tasks using four threads as a function of task complexity (i.e., single-thread execution time). Representative tasks are encoded as three underscore-separated values: the number of unknown spectra, the mass spectral library and the presearch option. All searches used the &#39;Identity EI Normal&#39; algorithm." src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAbAAAAFQCAMAAADp1NuaAAAArlBMVEUAAAAAADoAAGYAOmYAOpAAZrY6AAA6ADo6AGY6OgA6Ojo6OpA6ZmY6kNtmAABmADpmAGZmOgBmZgBmZmZmkJBmkNtmtrZmtttmtv9mwqWNoMuQOgCQOjqQOmaQkGaQtpCQ27aQ29uQ2/+2ZgC2Zjq225C2/7a2/9u2///bkDrbkGbbkJDbtmbb25Db29vb/7bb/9vb///l5eXnisP8jWL/tmb/25D//7b//9v///9yfQaQAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAPJUlEQVR4nO2dDXejuBWGyTRxdps6mbbb1omnk52wnYa2uzuZxI75/3+skkBY5kOgD+Be/D7nzHHGwLXMY4krBCLJASuSuQsA3IAwZkAYMyCMGRDGDAhjBoQxA8KYAWHMgDBmQBgzIIwZEMYMCGMGhDEDwpgBYcyAMGZEEpaAMRhRWJww4AQIYwaEMQPCJuN7knwPjwJhUyF0fW9NGRzDDHwvUujzReiSBO8UCJuG71pYaKs4hjBLj+FsKX2FVzHUsGmAMGaQbhLjhiHHfZLcu2+FpGMuhK57n+Ozd1p/2n+DMEeELonHl/PsONdEQ5gb91rY/UQfWG9KIcyN0pdXFfOhkaxAmBtTC2t0ByDMjambRAgLxT/p8AJNYjC+ab3vxyHpCMWv4+wN0npuoOPMGghjBoQxA8KYAWHMgDBmQBgzIIwZEMYMCGMGhDEDwpgBYcyAMGZAGDMgjBkQxgwIYwaENXlLkre5y9CJVdj++un9Nrl4iheaA0LXG927EW3CDtt1nl6+7C5furYWOi9/XSXJ1dDQDBC6JFRLbxP2fvd02F7l+x+eu7ZOr/JM2srajFH9ynbetDCiraK9hm32q02eddYwYVQ2m3m7U57CSl9kq5j9GLYS1Sf90FnBpDD571SYbRor+rAW1ktaVj40iZMRmNan0pQ80IWFoQTbpENkgCXdbaJzaA7wTevzTKp6v13HC80Cth3n99uNfLGk9c6hQSg9/TD5sjuzJpE2aBKZYc8SdzLn2EQMDULB2XpmQBgzrMJ2Z9kPo03P8Mphu0HSQYq+tD5d55bxMOfQIJQ+YZl1PMw5NAjFegxLr2T16h4Pcw8NQrEKk+em0rO7poM2SOuZAWHMsAvLkmTjmyRC2CjYk47Lb9tNMaocKTQIpfcytw3SelIMEIbxMErYx8Nkk4hTU6QYMB7m6QvCRgFpPTN6LtWOHRqEMuAinJihQSj2pMOzB9YdGoRivy4RI87kWHTS8ZAkD3OXITZLFiZ0PdC9SN6TvvvDGDeJQpdk7mJExp7Wc046HrSwZbWKy03rS19Lq2LL7TgfhS3KmP1CUt+xy87QE3JsEsMf7UqIBd+BqYVFeHgyIcZI66nMIlCk9VGenkyHAUkH3xFn2XGO87hrOiz6Dsxoz5MnRLewXTVBCt+LcGI9T54Qy+2HKbyfJ0+WJZ9LlHg+T54uSxe2OCCMGRDGjOWeS1woC88SlwcuwmEGLsJhBpIOZkAYM9AkMqO/hh0+YRYBQgxoEjETDiUGCOM7gLlEBghLGdWwxZ2cbzAg6WA0E87yhr8aLCqtX+AAc4MlCVviJRwN7MIyVjell76WXcXsJ395TYN+9sLKJ0Owuczt7JtEbsKQdDBrEpHWM0s68nPvOI8QGoRiud3o7mdc00EPCGOGpUlMmd/Qt0xwmRszkHQwI0zYYVtk/a19awgbgzBhcsJtOb4JYZMRJKw4yKUfniFsMiIIy7PL/5nCqlttgwsHmliF9U4OVj6DIG1dBcLGwH67Ud/NEIdtcYFOCmFTgX4YM3BDHzOsxzDWk4MtFMvJX+6Tgy0TnJpixoCkA9fWU2KAMD4X4ZwD3cKWMDnYAkE/jBlIOphhS+v/jnuc6YEaxgwIY4b92nrPxrA7NAjFXsPk6SlvaRA2Bv1Nonc9g7AxsAuTQ86+96RD2CjYj2EYXiEHahgz+o9hhy2OYYSwC0sDTnRA2CjYj2FJyEUdEDYGONPBDAhjBoQ1SOhhlq6txJG+eJwwk0Ov3BBmhV65hwtT83T4Zor0vvgw6JV7sDB2M+FEgV65hwqjMtfUa5K8TjjFDXthc19IKnS9TjmJFF9h+U6e+J27SRS6JMlk07TxFXa8HcLrfGKcL/6qhb1ONREiX2ERPyYgyuvrxFUMwsKiQJhzk+jaHracUPEHTaJrDZv7YTlzJh33SXIfGO23wO0ljk3i3A/LmS+tF7rua59a3Petp2zSrzWOd5Ecti2Ld2KjnctMr47C5u6HzdZxFrok5vcQhjbFfBiyt6Nfu2kVpiZ8crmHy1EYp4flxECX+14Lu68WZckf/iyE7a+fVMOjX/Xi97vHlbxoSdawTF6+JGvg0Yz8n1g5FVnBX5wyA8ekg9HDcqKgy136MqvYf59Vk6gciYZHv+rF6ppb8fsWwuT5PPHPrGFqnhr56x+7hvmyQGHlMSxToq6f9KteqM7lCU2lsPy0SVRm5SoQFhdLkzhcmGz+NqfCVH2Ub4wk7Gzn6bAlHXlPk1gJy+U1gvIgNp2wHONhXWm9ciSTjvJVLzwVJuVM2yQSGV6ZGmvHWQnrSutrxzDRWE6bdJzpPB3Wcls7zmYNS4uLK7JmWo8mMTL0yj08S9zhIhwKIK234lzucqbdjjMM9qXOJYKwBvTKPVxYJhpE71ku6X3xYdAr92Bh6eW37cYtoekJzQF65XZI62UWe8b9sLckeZuvIBWOws63HyZ0vcUaNvUYea42Gd4Pk03i+fbDhC6J8T30RDMq8xPHdvn/8oBhnAM+rt498mzWgpbRZ1VXqjcd+2EzPLR01meP6nK/aWFVq6h+u/Jswq6wJE82lU9jOGytabtVWEuS4CssCP8w8z7dtxoPe3urVTG1l9V5p83x/0XVyv5k1LCekWdRLy8+i02NEehnVWc3xsmtL8Ym1IXN/PzsbmEKeUr3049qV6vxMLWP9ze/msJ6Rp7Xag31XlacDFZBUiHKHFHzqGGz9MPmfkJ9d5Moqc7Q729eihq22shLAfcnwmwjz+qtXfkMr4PRb9oFC5unH1b6mq2KWZIO8wFCYt++38rz7qIly9Z5h7CWkeesHPbMilNWxYBmmc+ECZupH0ZGWEtav19Ve1HuGrmX/7HdiMrWJSxvjjxXwnTTpZpEIS64hs3UD6PSJObNjvPu4jhCqHP2Y12phjXsI88nTaJECFPHnfAmcaZ+GJGko4muRfrCDvl/vV8tx7CWkeci6ZBPDxU/ASlMrraSNfFKTe7FrB9GI61vUtUk2RSqOnHcPV1NYvvIc5XWyyqrRqDFEezrrYp88fjDc9Eh4JLWE+k404G+sFmhV26nfhguERjMaCPPuAjHCr1yD07riczTMTH0yu0o7IwHMB+S5GG+glQMbhL75umwX37PX5jQ9RDavQgZuKzK0fF3/b0B83S0nWdsm+WPE8dziQ8K43vogUv/W2adBi4bJcr7ssReWm8JdQ9DCl3uBy3s2CoaA5eet8w6DVzWS1T/2/aeB9yFlb7MKlYOXHreMus8cFkvUf3v+nupCJ55PwJzgcL0wKXvLbOuA5f1EtX/rr0nY6rPPNPrEptNoh649Ltl1n3gsl6i+t+n76lT0jLm2fbDmkmHROxbv1tm3QcuGyXKbcJkQ6w2Pt9+WGtaL37IfrfMug9cNktkFSZi1I+qTvAXVu8464FLv1tm3QcuW0pkO4aJePLHYIyKu7EAYTX0wKX/LbNuA5dtJbIIk+NsT+oaEz+WJ6wauPS+ZdZt4LKtROiHNaBXbgizQq/cEGbFudy4ZXZe6JUbwqzQKzeEWaFXbgizYpRbzoUaGG3KAcxA+AsrZhs+WRg65+/cA5g22AvT83kby4Ln/MUAZnx0uY8z5leLwub8HX0AMxDuwo7PpKgWBc75O/IAZigLFBY05+/YA5jBcBfW0iQGzfk79gBmMJYws96d0oct6QiZ83fsAcxgusPMe/9XH/1pPdEBzFA6w8x8h2Uf1o5z4Jy/ow5ghtIVZu57mPuwfv3AOX9ZDmDOPUtAH/SKBWFW6BULTaIVDGA2FpCuYKhhLUuYpPVUmF0Yk44zGeYXRhp65YYwK/TKDWFW6JV7emGkj1l1IIx4VliHXkHHFlafRYB4v6tOQg+zdG0ljvTFy1fqZzZ4MYEw6ucOeQFhzECTyIwpskRmSQdtkNYzAx1nZuDUFDMgjBkQxgwIY8aYwsAYjCdsgFLC0WgXbsLg430QhI0O6X1CunATBh/vgyBsdEjvE9KFmzD4eB8EYaNDep+QLtyEwcf7IAgDTIAwZkAYMyCMGRDGDAhjBoQxA8KYAWHMgDBmQBgzIIwZEMaMqYQVM6PFi9QxKXlIqJCQ7ZGiFLLGRMKKKcXjReqflNw5VEjI9khRCllnGmHllOLxIgU9/7E9VEDIjkgxCtlgGmHllOLxItVn4I0QKiBkR6QYhWzA9BhWn+M6QqigkK2R4hSyBoRBWCuRhcVpbWI1iR2R0CQeI9UnJY8QKihka6Q4hazBVFicjNk6z3l4JMZpPTrO0cCpKWZAGDMgjBkQxgwIYwaEMQPCmAFhzIAwZkAYMyCMGRDGDAhjBoQxA8KYAWHMgDBmQBgzIIwZEMYMCGMGhDEDwpjBT9hvXou813Rbd3zoCHu/VVO1f7Bfin7YrvP3u9b7CyyLTj7n7kmteTvsytZh6+56ih0PSsKG7EG5/9wXtawJYaFUeyW7fJFXpcvrnNXtHyv5opbuPvxbvHklq1G59P3ucZVcqFp1KBftrz+LP3biX17FKK6l3q82Ivjvd1/Umrc/6S3zRjRzO2Pdw6fP4sUoWCLvlBVNw8VnQ1iWVHFHgKAw8cf+5kXVF+FO/K/6kYvfcdnuSaN5KpeKPZXqfasW7VdX+U7Y2l8/6RhyaSbe/eM6T9dVk2hueRrN3M5c97AV7xkFExuVJbo9CpOVbcQKR0mYOoaJXbe7SjfFdxb1ovzuNWHqTh7xnn5brlIJ26i1xT8dQy7dXb5kf70S/zGPYeWW9WjmdvVfS24urFbenQobEUrC9IFC/eCz4nEx6/KHXhOm7roSf7cJu35SuYdYpGOoAB+ff3m8+f3jc4uwejRzu1Nhm2PBip+YWLl2255sMWPdqdMCRWGqgSlF5UHCjJvpDp++/PPrx3/dvAwRZm7XEFYuFLrW1cqn91mmIx7EKArL1tm6alncm8SjsJPWKfvp5tunz+t8aJNY0hBWFUyKamkS9UYjQVCY2H1qp4odsrt4km9nV3mRN7YkHTZhOoYKuxMV4pcfN23C6tHM7RrC9EK57X518VTcZ3l6DIt9J7oBJWHFwWGTyr1XpPVyn4ns+cNzkTw/ipqQnab1xm4vFxnCqhhFfGFerCmXyTXNLevRzO2MdY/3WcqFqTiCfS0+RKX1aVmr0mTMgxgdYezZ/22KT4GwaPxnvN6yAYQxA8KYAWHM+D8lWhXsdri0UQAAAABJRU5ErkJggg==" alt="Figure 1. Speedup obtained for various library search tasks using four threads as a function of task complexity (i.e., single-thread execution time). Representative tasks are encoded as three underscore-separated values: the number of unknown spectra, the mass spectral library and the presearch option. All searches used the &#39;Identity EI Normal&#39; algorithm." />
+<p class="caption">
+Figure 1. Speedup obtained for various library search tasks using four
+threads as a function of task complexity (i.e., single-thread execution
+time). Representative tasks are encoded as three underscore-separated
+values: the number of unknown spectra, the mass spectral library and the
+presearch option. All searches used the ‘Identity EI Normal’ algorithm.
+</p>
+</div>
+<p>Figure 2 illustrates how speedup varies with the number of threads
+for several representative library search tasks. The color scheme
+matches that of Figures 1. For tasks of moderate to high complexity,
+speedup grows nearly linearly with the number of threads up to four,
+which corresponds to the number of physical cores. Beyond four threads,
+a noticeable slowdown occurs due to hyperthreading overhead, a common
+phenomenon in parallel computing.</p>
+<div class="figure" style="text-align: center">
+<img role="img" aria-label="Figure 2. Speedup as a function of the number of threads for several representative library search tasks. Task complexity is represented by single-thread execution time." src="data:image/png;base64,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" alt="Figure 2. Speedup as a function of the number of threads for several representative library search tasks. Task complexity is represented by single-thread execution time." />
+<p class="caption">
+Figure 2. Speedup as a function of the number of threads for several
+representative library search tasks. Task complexity is represented by
+single-thread execution time.
+</p>
+</div>
+<hr />
+<p>Built with <code>mspepsearchr_0.2.0</code>.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
