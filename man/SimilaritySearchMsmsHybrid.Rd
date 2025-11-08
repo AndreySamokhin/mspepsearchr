@@ -7,9 +7,10 @@
 SimilaritySearchMsmsHybrid(
   spectra,
   libraries,
+  n_threads = 1L,
   presearch = "default",
-  precursor_ion_tol = list(value = 1.6, utits = "mz"),
-  product_ions_tol = list(value = 0.6, units = "mz"),
+  precursor_ion_tol = list(value = 20, utits = "ppm"),
+  product_ions_tol = list(value = 0.01, units = "mz"),
   ignore_precursor_ion_tol = NULL,
   n_hits = 100L,
   search_method = "standard",
@@ -17,7 +18,7 @@ SimilaritySearchMsmsHybrid(
   min_abundance = 1L,
   mz_min = NULL,
   mz_max = NULL,
-  load_in_memory = FALSE,
+  load_in_memory = TRUE,
   temp_dir = NULL,
   addl_cli_args = NULL
 )
@@ -39,6 +40,10 @@ libraries:
   c("C:/NIST23/MSSEARCH/mainlib/",
     "C:/NIST23/MSSEARCH/replib/")
 }}
+
+\item{n_threads}{An integer value. Number of parallel threads to use for computation.
+External process parallelization is employed, where each R worker launches
+an independent CLI call.}
 
 \item{presearch}{A string or a list. The presearch routine applies simple algorithms to
 reduce the search space and significantly speed up search times. However,
@@ -80,8 +85,8 @@ that closely match may sometimes be excluded.
     }
   }
   \item{InChIKey}{Restrict search to only molecules with the first segment
-  (i.e., \code{n_segments = 1L}) of the InChIKey being the same as that of the
-  search spectrum. Use this presearch when the chemical structure or
+  (i.e., \code{n_segments = 1L}) of the InChIKey being the same as that of
+  the search spectrum. Use this presearch when the chemical structure or
   InChIKey of the search spectrum is known. To use this presearch, a
   library must be indexed by InChIKey. An older library may be indexed by
   selecting (Re)Index InChIKey from the Tools menu of the MS Search (NIST)
@@ -236,11 +241,11 @@ This documentation includes content adapted from the official MS Search
                                          best_hits_only = TRUE)
 
   # Printing the top three rows of the first hitlist
-  print(hitlists[[1]][1:3, ])
+  print(head(hitlists[[2]], 3L))
 
   #>                      name score dot rdot pss_dot deltamass  formula ...
-  #> 1           Norethindrone   260 710  788     762  -10.0696 C20H26O2 ...
-  #> 2            Progesterone   260 707  778     792  -26.1009 C21H30O2 ...
-  #> 3 4-Androstene-3,17-dione   246 698  791     777    1.9304 C19H26O2 ...
+  #> 1            Testosterone   959 965  976     970    0.0000 C19H28O2 ...
+  #> 2 4-Androstene-3,17-dione   951 957  970     962    2.0156 C19H26O2 ...
+  #> 3            Progesterone   935 955  958     980  -26.0157 C21H30O2 ...
 
 }

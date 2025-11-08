@@ -1,18 +1,135 @@
 #==============================================================================#
-#' Internal interface to MSPepSearch
+#' Split spectra into multiple files for parallel computation
 #'
 #' @description
-#'   Manage communication with MSPepSearch (NIST), an external CLI application
-#'   that performs the actual library search computations. This function is
-#'   called by intermediate wrappers and not intended for direct use by package
-#'   users.
+#'   A helper function that writes mass spectra to disk and split the output
+#'   into several files when \code{n_treads > 1L}.
+#'
+#' @return A character vector. Names of the temporary output files.
 #'
 #' @importFrom mssearchr WriteMsp
 #'
 #' @noRd
-#'
 #==============================================================================#
-.LibrarySearch <- function(
+.SplitSpectraForParallel <- function(spectra,
+                                     temp_dir,
+                                     n_threads) {
+
+  #--[ Check input arguments ]--------------------------------------------------
+
+  # 'spectra'
+  if (is.character(spectra)) {
+    if (length(spectra) != 1L) {
+      stop("'spectra' must be a single file path.")
+    }
+    # Other sanity checks are performed within 'normalizePath()'.
+  } else {
+    if (!is.list(spectra) || !is.list(spectra[[1]]) ||
+        is.null(spectra[[1]]$mz) || is.null(spectra[[1]]$intst) ||
+        is.null(spectra[[1]]$name)) {
+      stop("'spectra' is invalid.")
+    }
+  }
+
+  # 'temp_dir'
+  if (!is.character(temp_dir) || length(temp_dir) != 1) {
+    stop("'temp_dir' must be a string.")
+  }
+  if (!dir.exists(temp_dir)) {
+    stop("The directory ", "'", temp_dir, "'", " does not exist.")
+  }
+
+  # 'n_threads'
+  .CheckNumThreads(n_threads)
+
+
+  #--[ Helper functions ]-------------------------------------------------------
+
+  .Split <- function(len, n) {
+    # Split sequence into approximately equal parts and return start indices for
+    # each part. Code was adopted from 'parallel::splitIndices()'.
+    if (len <= n) {
+      return(seq_len(len))
+    }
+    fuzz <- 0.4
+    start_idxs <- ceiling(seq(1 - fuzz, by = (len - 1 + 2 * fuzz) / n,
+                              length.out = n))
+    return(start_idxs)
+  }
+
+
+  #--[ Split input spectra ]----------------------------------------------------
+
+  if (is.character(spectra)) { # i.e., 'spectra' is a path to an MSP/MGF file
+    if (n_threads == 1L) {
+      return(normalizePath(spectra))
+    } else {
+      all_lines <- readLines(spectra)
+      ms_start_idxs <- grep("^name:", all_lines, ignore.case = TRUE)
+      if (length(ms_start_idxs) > 0L) { # i.e., MSP
+        file_extension <- ".msp"
+      } else { # i.e., MGF
+        begin_ions_idxs <- grep("^begin ions", all_lines, ignore.case = TRUE)
+        if (length(begin_ions_idxs) == 0L) {
+          stop("No spectra found in file: ", spectra)
+        }
+        stop("Multiprocessing is not yet supported for MGF files.")
+      }
+      if (n_threads > length(ms_start_idxs)) {
+        n_threads <- length(ms_start_idxs)
+      }
+      ms_split_idxs <- .Split(length(ms_start_idxs), n_threads)
+      chunk_start_idxs <- ms_start_idxs[ms_split_idxs]
+      chunk_end_idxs <- c(chunk_start_idxs[-1L] - 1L, length(all_lines))
+      input_files <- vapply(seq_len(n_threads), function(file_no) {
+        line_idxs <- seq(chunk_start_idxs[[file_no]], chunk_end_idxs[[file_no]])
+        temp_file_name <- tempfile("mspepsearchr_", tmpdir = temp_dir,
+                                   fileext = file_extension)
+        writeLines(all_lines[line_idxs], temp_file_name)
+        return(temp_file_name)
+      }, character(1L))
+      return(input_files)
+    }
+  } else { # i.e., 'spectra' is a list of nested lists
+    if (n_threads == 1L) {
+      input_file <- tempfile("mspepsearchr_", tmpdir = temp_dir,
+                             fileext = ".msp")
+      mssearchr::WriteMsp(spectra, input_file)
+      return(input_file)
+    } else {
+      start_idxs <- .Split(length(spectra), n_threads)
+      end_idxs <- c(start_idxs[-1L] - 1L, length(spectra))
+      input_files <- vapply(seq_len(n_threads), function(file_no) {
+        spectra_idxs <- seq(start_idxs[[file_no]], end_idxs[[file_no]])
+        temp_file_name <- tempfile("mspepsearchr_", tmpdir = temp_dir,
+                                   fileext = ".msp")
+        mssearchr::WriteMsp(spectra[spectra_idxs], temp_file_name)
+        return(temp_file_name)
+      }, character(1L))
+      return(input_files)
+    }
+  }
+}
+
+
+
+#==============================================================================#
+#' Prepare CLI jobs
+#'
+#' @description
+#'   Internal helper that assembles CLI arguments and output file paths.
+#'
+#' @return
+#'   A list of job descriptors, each containing:
+#'   \itemize{
+#'     \item \code{cli_args} - A character vector of CLI arguments.
+#'     \item \code{output_file} - The path to the output file returned by
+#'     MSPepSearch.
+#'   }
+#'
+#' @noRd
+#==============================================================================#
+.PrepareJobs <- function(
     spectra,
     libraries,
     algorithm,
@@ -33,6 +150,7 @@
     ri_column_type = NULL,
     load_in_memory = FALSE,
     temp_dir = NULL,
+    n_threads = 1L,
     addl_cli_args = NULL
 ) {
 
@@ -63,18 +181,7 @@
   #--[ Check input arguments ]--------------------------------------------------
 
   # 'spectra'
-  if (is.character(spectra)) {
-    if (length(spectra) != 1L) {
-      stop("'spectra' must be a single file path.")
-    }
-    # Other sanity checks are performed within 'normalizePath()'.
-  } else {
-    if (!is.list(spectra) || !is.list(spectra[[1]]) ||
-        is.null(spectra[[1]]$mz) || is.null(spectra[[1]]$intst) ||
-        is.null(spectra[[1]]$name)) {
-      stop("'spectra' is invalid.")
-    }
-  }
+  # It is checked elsewhere, see '.SplitSpectraForParallel()'.
 
 
   # 'libraries'
@@ -232,14 +339,10 @@
   }
 
   # 'temp_dir'
-  if (!is.null(temp_dir)) {
-    if (!is.character(temp_dir) || length(temp_dir) != 1) {
-      stop("'temp_dir' must be a string.")
-    }
-    if (!dir.exists(temp_dir)) {
-      stop("The directory ", "'", temp_dir, "'", " does not exist.")
-    }
-  }
+  # It is checked elsewhere, see '.SplitSpectraForParallel()'.
+
+  # 'n_threads'
+  # It is checked elsewhere, see '.SplitSpectraForParallel()'.
 
   # 'addl_cli_args'
   if (!is.null(addl_cli_args)) {
@@ -249,41 +352,52 @@
   }
 
 
-  #--[ Input and output files ]-------------------------------------------------
+  #--[ CLI arguments ]----------------------------------------------------------
+
+  # [{sdfmk[n]}][aijnopqr[2]vx][{uyz}][{leh[n]}[{IQSHLMPGD}]
+  # [/Z[PPM] z] [/M[PPM] m] [/ZI[PPM] zi] [/W[PPM] w] ...
+  # [/PATH path]
+  # [/LIB lib]
+  # [/WRK wrk]
+  # /INP InputFile
+  # [/OUT[TAB] OutputFile] [/HITS max_hits] [/MinMF minmf] ...
+
+  cli_args <- list(encoded = "",
+                   params  = character(0L),
+                   libs    = character(0L),
+                   output  = character(0L),
+                   addl    = NULL)
+
+  temp <- unlist(lapply(addl_cli_args, strsplit, split = " ", fixed = TRUE))
+  if ("x" %in% temp) {
+    cli_args$encoded <- paste0(cli_args$encoded, "x")
+    cli_args$addl <- temp[!(temp %in% c("", "x"))]
+  } else {
+    cli_args$addl <- temp[temp != ""]
+  }
+
+  forbidden_options <-
+    c("/PATH", "/MAIN", "/REPL", "/LIB", "/WRK", "/INP", "/OUT", "/OUTTAB")
+  mask <- (forbidden_options %in% toupper(cli_args$addl))
+  if (any(mask)) {
+    stop("The following CLI options are not intended to be set manually: ",
+         paste(forbidden_options[mask], collapse = ", "))
+  }
+
+
+  #--[ Input files ]------------------------------------------------------------
 
   if (is.null(temp_dir)) {
     temp_dir <- tempdir()
   }
-
-  if (is.character(spectra)) {
-    input_file <- normalizePath(spectra)
-  } else { # i.e., 'is.list(spectra) && ...'
-    input_file <- tempfile("mspepsearchr_", tmpdir = temp_dir, fileext = ".msp")
-    mssearchr::WriteMsp(spectra, input_file)
-  }
-
-  libraries <- normalizePath(libraries)
-
-  output_file <- tempfile("mspepsearchr_", tmpdir = temp_dir, fileext = ".txt")
+  input_file_names <- .SplitSpectraForParallel(spectra = spectra,
+                                               temp_dir = temp_dir,
+                                               n_threads = n_threads)
 
 
-  #--[ CLI arguments ]----------------------------------------------------------
-
-  cli_args <- list()
+  #--[ CLI arguments (search options) ]-----------------------------------------
 
   #.. Algorithm ................................................................
-  encoded_algorithm <- switch(algorithm,
-                              identity_normal = "I",
-                              identity_quick = "Q",
-                              similarity_simple = "S",
-                              similarity_hybrid = "H",
-                              similarity_msms_hybrid = c("G", "y", "a", "l"),
-                              similarity_neutral_loss = "L",
-                              similarity_msms_in_ei = "M",
-                              identity_hires = c("G", "u", "a", "l"),
-                              identity_msms = c("G", "z", "a", "l"),
-                              stop("'algorithm' is invalid."))
-  cli_args <- c(cli_args, encoded_algorithm)
   # LoRes search types:
   #   I - identity
   #   Q - quick identity
@@ -302,6 +416,18 @@
   #   y - hybrid similarity search for ms/ms spectra
   #   a - alternative peak matching in computing match factors (recommended)
   #   l/e/h - low, medium or high ms/ms search threshold
+  encoded_algorithm <- switch(algorithm,
+                              identity_normal = "I",
+                              identity_quick = "Q",
+                              similarity_simple = "S",
+                              similarity_hybrid = "H",
+                              similarity_msms_hybrid = "aylG",
+                              similarity_neutral_loss = "L",
+                              similarity_msms_in_ei = "M",
+                              identity_hires = "aulG",
+                              identity_msms = "azlG",
+                              stop("'algorithm' is invalid."))
+  cli_args$encoded <- paste0(cli_args$encoded, encoded_algorithm)
 
   #.. Presearch ................................................................
   encoded_presearch <- switch(presearch[[1L]],
@@ -312,87 +438,64 @@
                               mw = paste("/MwPresearch", presearch[[2L]]),
                               inchikey = paste0("k", presearch[[2L]]),
                               stop("'presearch' is invalid."))
-  cli_args <- c(cli_args, encoded_presearch)
-
-  #.. Input file, /INP .........................................................
-  cli_args <- c(cli_args, paste("/INP", input_file))
-
-  #.. MainLib, /MAIN ...........................................................
-  idx_mainlib <- which(tolower(basename(libraries)) == "mainlib")
-  if (length(idx_mainlib) > 0L) {
-    cli_args <- c(cli_args, paste("/MAIN", libraries[[idx_mainlib]]))
+  if (startsWith(encoded_presearch, "/")) {
+    cli_args$params <- c(cli_args$params, encoded_presearch)
+  } else {
+    cli_args$encoded <- paste0(cli_args$encoded, encoded_presearch)
   }
 
-  #.. RepLib, /REPL ............................................................
-  idx_replib <- which(tolower(basename(libraries)) == "replib")
-  if (length(idx_replib) > 0L) {
-    cli_args <- c(cli_args, paste("/REPL", libraries[[idx_replib]]))
+  #.. Search method ............................................................
+  search_method <- match.arg(search_method)
+  if (search_method == "reverse") {
+    cli_args$encoded <- paste0(cli_args$encoded, "r")
+  } else if (search_method == "pss") {
+    cli_args$encoded <- paste0(cli_args$encoded, "r2")
   }
 
-  #.. Other libraries, /LIB ....................................................
-  mask_other_libs <- !(tolower(basename(libraries)) %in% c("mainlib", "replib"))
-  if (sum(mask_other_libs) > 0L) {
-    cli_args <- c(cli_args, paste("/LIB", libraries[mask_other_libs]))
+  #.. Penalize rare compounds ..................................................
+  if (penalize_rare_compounds) {
+    # This option is deprecated in MS Search 3.0 (NIST23).
+    cli_args$encoded <- paste0(cli_args$encoded, "p")
   }
 
   #.. Precursor ion tolerance, /Z or /ZPPM .....................................
   if (!is.null(precursor_ion_tol)) {
     if (precursor_ion_tol[[2L]] == "mz") {
-      cli_args <- c(cli_args, paste("/Z", precursor_ion_tol[[1L]]))
+      cli_args$params <- c(cli_args$params, "/Z", precursor_ion_tol[[1L]])
     } else { # i.e., 'precursor_ion_tol[[2L]] == "ppm"'
-      cli_args <- c(cli_args, paste("/ZPPM", precursor_ion_tol[[1L]]))
+      cli_args$params <- c(cli_args$params, "/ZPPM", precursor_ion_tol[[1L]])
     }
   }
 
-  #..Ignoring peaks around precursor, /ZI[PPM]
+  #..Ignoring peaks around precursor, /ZI or /ZIPPM ............................
   if (!is.null(ignore_precursor_ion_tol)) {
-    cli_args <- c(cli_args, "i")
+    cli_args$encoded <- paste0(cli_args$encoded, "i")
     if (ignore_precursor_ion_tol[[2L]] == "mz") {
-      cli_args <- c(cli_args, paste("/ZI", ignore_precursor_ion_tol[[1L]]))
+      cli_args$params <-
+        c(cli_args$params, "/ZI", ignore_precursor_ion_tol[[1L]])
     } else { # i.e., 'ignore_precursor_ion_tol[[2L]] == "ppm"'
-      cli_args <- c(cli_args, paste("/ZIPPM", ignore_precursor_ion_tol[[1L]]))
+      cli_args$params <-
+        c(cli_args$params, "/ZIPPM", ignore_precursor_ion_tol[[1L]])
     }
   }
 
   #.. Product ion tolerance, /M or /MPPM .......................................
   if (!is.null(product_ions_tol)) {
     if (product_ions_tol[[2L]] == "mz") {
-      cli_args <- c(cli_args, paste("/M", product_ions_tol[[1L]]))
+      cli_args$params <- c(cli_args$params, "/M", product_ions_tol[[1L]])
     } else { # i.e., 'product_ions_tol[[2L]] == "ppm"'
-      cli_args <- c(cli_args, paste("/MPPM", product_ions_tol[[1L]]))
+      cli_args$params <- c(cli_args$params, "/MPPM", product_ions_tol[[1L]])
     }
   }
 
   #.. Nominal MW or precursor m/z, /MwForLoss ..................................
   if (!is.null(nominal_mw)) {
-    cli_args <- c(cli_args, paste("/MwForLoss", nominal_mw))
-  }
-
-  #.. The number of hits, /HITS ................................................
-  cli_args <- c(cli_args, paste("/HITS", n_hits))
-
-  #.. Search method ............................................................
-  search_method <- match.arg(search_method)
-  if (search_method == "reverse") {
-    cli_args <- c(cli_args, "r")
-  } else if (search_method == "pss") {
-    cli_args <- c(cli_args, "r2")
-  }
-
-  #.. Best hits only ...........................................................
-  if (best_hits_only) {
-    cli_args <- c(cli_args, "/OutBestHitsOnly")
-  }
-
-  #.. Penalize rare compounds ..................................................
-  if (penalize_rare_compounds) {
-    # This option is deprecated in MS Search 3.0 (NIST23).
-    cli_args <- c(cli_args, "p")
+    cli_args$params <- c(cli_args$params, "/MwForLoss", nominal_mw)
   }
 
   #.. Minimum abundance, /MinInt ...............................................
   if (min_abundance > 1L) {
-    cli_args <- c(cli_args, paste("/MinInt", min_abundance))
+    cli_args$params <- c(cli_args$params, "/MinInt", min_abundance)
   }
 
   #.. Minimum and maximum m/z, /MzLimits .......................................
@@ -403,15 +506,65 @@
     if (is.null(mz_max)) {
       mz_max <- -1L
     }
-    cli_args <- c(cli_args, paste("/MzLimits", mz_min, mz_max))
+    cli_args$params <- c(cli_args$params, "/MzLimits", mz_min, mz_max)
   }
 
-  #.. Output all hit lists, /All ...............................................
-  cli_args <- c(cli_args, "/All")
 
-  #.. Output file, /OUTTAB .....................................................
-  cli_args <-
-    c(cli_args, paste("/OUTTAB", normalizePath(output_file, mustWork = FALSE)))
+  #--[ CLI arguments (mass spectral libraries) ]--------------------------------
+
+  libraries <- normalizePath(libraries)
+
+  #.. MainLib, /MAIN ...........................................................
+  mainlib_idx <- which(tolower(basename(libraries)) == "mainlib")
+  if (length(mainlib_idx) == 1L) {
+    cli_args$libs <- c(cli_args$libs, "/MAIN", libraries[[mainlib_idx]])
+  } else if (length(mainlib_idx) > 1L) {
+    stop("Several 'mainlib' libraries are specified.")
+  }
+
+  #.. RepLib, /REPL ............................................................
+  replib_idx <- which(tolower(basename(libraries)) == "replib")
+  if (length(replib_idx) == 1L) {
+    cli_args$libs <- c(cli_args$libs, "/REPL", libraries[[replib_idx]])
+  } else if (length(replib_idx) > 1L) {
+    stop("Several 'replib' libraries are specified.")
+  }
+
+  #.. Other libraries, /LIB ....................................................
+  lib_idxs <- which(!(tolower(basename(libraries)) %in% c("mainlib", "replib")))
+  for (i in lib_idxs) {
+    cli_args$libs <- c(cli_args$libs, "/LIB", libraries[[i]])
+  }
+
+
+  #--[ CLI arguments (Output and Other Options) ]-------------------------------
+
+  #.. Best hits only ...........................................................
+  if (best_hits_only) {
+    cli_args$output <- c(cli_args$output, "/OutBestHitsOnly")
+  }
+
+  #.. The number of hits, /HITS ................................................
+  cli_args$output <- c(cli_args$output, "/HITS", n_hits)
+
+  #.. Output all hit lists, /All ...............................................
+  cli_args$output <- c(cli_args$output, "/All")
+
+  #.. Retention indices, /RI ...................................................
+  if ("/RI" %in% cli_args$addl) {
+    warning("'ri_column_type' is ignored, ",
+            "because 'addl_cli_args' contains '/RI'.")
+  } else if (!is.null(ri_column_type)) {
+    encoded_column <- switch(ri_column_type,
+                             n = "n",
+                             s = "s",
+                             p = "p",
+                             stdnp = "n",
+                             semistdnp = "s",
+                             stdpolar = "p",
+                             stop("'ri_column_type' is invalid."))
+    cli_args$output <- c(cli_args$output, "/RI", paste0(encoded_column, "ux"))
+  }
 
   #.. Additional columns .......................................................
   # "/OutRevMF"    - Reverse Match Factor (the same as 'v')
@@ -420,62 +573,146 @@
   # "/OutCAS"      - CAS registry number
   # "/OutChemForm" - Chemical formula
   # "/OutIK"       - InChIKey
-  # "/RI x"        - Retention indices (I, S, L, Q, H searches)
   # "x"            - Do not output hit probabilities
-  cli_args <- c(cli_args, addl_columns)
-  temp <- unlist(strsplit(paste(addl_cli_args, collapse = " "), " ",
-                          fixed = TRUE))
-  if (all(trimws(temp) != "/RI")) {
-    if (!is.null(ri_column_type)) {
-      encoded_ri_column_type <- switch(ri_column_type,
-                                       n = "n",
-                                       s = "s",
-                                       p = "p",
-                                       stdnp = "n",
-                                       semistdnp = "s",
-                                       stdpolar = "p",
-                                       stop("'ri_column_type' is invalid."))
-      cli_args <- c(cli_args, paste0("/RI ", encoded_ri_column_type, "ux"))
-    }
-  } else {
-    warning("'ri_column_type' is ignored, ",
-            "because 'addl_cli_args' contains '/RI'.")
-  }
+  cli_args$output <- c(cli_args$output, addl_columns)
+
 
   #.. Load libraries in memory .................................................
   if (load_in_memory) {
-    cli_args <- c(cli_args, "/LibInMem")
+    cli_args$output <- c(cli_args$output, "/LibInMem")
   }
-
-  #.. Additional arguments .....................................................
-  cli_args <- c(cli_args, addl_cli_args)
 
 
   #--[ Check 'cli_args' ]-------------------------------------------------------
 
-  temp <- vapply(strsplit(unlist(cli_args), " ", fixed = TRUE), function(a1) {
-    a1[[1L]]
-  }, character(1L))
-  duplicated_args <- unique(temp[duplicated(temp)])
-  mask <- !(duplicated_args == "/LIB")
-  if (sum(mask) > 0L) {
-    stop("Some CLI arguments are duplicated: ",
-         paste(duplicated_args[mask], collapse = ", "))
+  all_cli_args <-
+    c(cli_args$params, cli_args$libs, cli_args$output, cli_args$addl)
+  mask <- startsWith(all_cli_args, "/")
+  all_cli_options <- all_cli_args[mask]
+  duplicated_cli_options <- unique(all_cli_options[duplicated(all_cli_options)])
+  if (length(duplicated_cli_options) != 0L) {
+    stop("The following CLI flags are duplicated: ",
+         paste(duplicated_cli_options, collapse = ", "))
+  }
+
+
+  #--[ Compile CLI call ]-------------------------------------------------------
+
+  out <- lapply(input_file_names, function(input_file) {
+    output_file <- normalizePath(
+      tempfile("mspepsearchr_", tmpdir = temp_dir, fileext = ".txt"),
+      mustWork = FALSE
+    )
+    # TODO: rename
+    cli_args <- c(cli_args$encoded,
+                  cli_args$params,
+                  cli_args$libs,
+                  "/INP", input_file,
+                  "/OUTTAB", output_file,
+                  cli_args$output,
+                  cli_args$addl)
+    return(list(cli_args = cli_args, output_file = output_file))
+  })
+  return(out)
+}
+
+
+
+#==============================================================================#
+#' Execute prepared CLI jobs and parse hit lists
+#'
+#' @description
+#'   Internal helper that runs a list of prepared jobs. For each job, it calls
+#'   the external CLI tool, parses the output files, and combines the results
+#'   into a list of data frames.
+#'
+#' @param jobs A list of jobs returned by \code{.PrepareJobs()}.
+#' @param n_threads An integer value. Number of threads to use.
+#'
+#' @return
+#'   Return a list of data frames. Each data frame represents a hit list.
+#'
+#' @importFrom parallel makeCluster
+#' @importFrom parallel stopCluster
+#' @importFrom parallel clusterExport
+#' @importFrom parallel parLapply
+#'
+#' @noRd
+#==============================================================================#
+.ExecuteJobs <- function(jobs,
+                         n_threads) {
+
+  #--[ Check input arguments ]--------------------------------------------------
+
+  # 'jobs'
+  # It is checked elsewhere, see '.CallAndParse()'.
+
+  # 'n_threads'
+  .CheckNumThreads(n_threads)
+
+
+  #--[ Execute jobs ]-----------------------------------------------------------
+
+  if (n_threads == 1L) {
+    res <- lapply(jobs, .CallAndParse)
+  } else if (length(jobs) == n_threads) {
+    cl <- parallel::makeCluster(n_threads)
+    on.exit(parallel::stopCluster(cl), add = TRUE)
+    parallel::clusterExport(cl, c(".CallAndParse", ".ParseOutputFile"),
+                            envir = asNamespace("mspepsearchr"))
+    res <- parallel::parLapply(cl, jobs, .CallAndParse)
+  } else {
+    stop("The number of jobs is not equal to the number of threads.")
+  }
+
+
+  #--[ Output ]-----------------------------------------------------------------
+
+  out <- unlist(res, recursive = FALSE)
+  attr(out, "cli") <- lapply(res, attr, which = "cli")
+  return(out)
+}
+
+
+
+#==============================================================================#
+#' Execute a single CLI job and parse the output
+#'
+#' @description
+#'   Internal helper function that runs the external CLI tool for a single job,
+#'   reads the output file, and parses it into a list of data frames (i.e.,
+#'   hit lists).
+#'
+#' @param job
+#'   A single job descriptor, typically returned by \code{.PrepareJobs()}.
+#'
+#' @return
+#'   A data frame containing the parsed results for the job.
+#'
+#' @noRd
+#==============================================================================#
+.CallAndParse <- function(job, os_arch = NULL) {
+
+  #--[ Check input arguments ]--------------------------------------------------
+
+  if (is.null(job$cli_args) | !is.character(job$cli_args) |
+      is.null(job$output_file) | !is.character(job$output_file) |
+      length(job$output_file) != 1L) {
+    stop("'job' is invalid.")
   }
 
 
   #--[ Call MSPepSearch ]-------------------------------------------------------
 
-  exe_path <- .GetExePath()
+  exe_path <- .GetExePath(os_arch)
   if (!file.exists(exe_path)) {
     stop("'", basename(exe_path), "' is missing.")
   }
 
   if (.Platform$OS.type == "windows") {
-    err_code <- system2(exe_path, args = unlist(cli_args), stderr = NULL)
+    err_code <- system2(exe_path, args = job$cli_args, stderr = NULL)
   } else if (.Platform$OS.type == "unix") {
-    err_code <- system2("wine", args = c(exe_path, unlist(cli_args)),
-                        stderr = NULL)
+    err_code <- system2("wine", args = c(exe_path, job$cli_args), stderr = NULL)
   } else {
     stop("Only Windows or Unix-like OS (with Wine installed) are supported.")
   }
@@ -487,7 +724,7 @@
 
   #--[ Output ]-----------------------------------------------------------------
 
-  hitlists <- ParseOutputFile(output_file)
+  hitlists <- .ParseOutputFile(job$output_file)
   return(invisible(hitlists))
 }
 

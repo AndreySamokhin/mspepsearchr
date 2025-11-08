@@ -5,7 +5,6 @@
 #'   A string. \code{"x32"}, \code{"x64"}, or \code{NA_character_}
 #'
 #' @noRd
-#'
 #==============================================================================#
 .GetOsArch <- function() {
   os_arch <- NA_character_
@@ -46,7 +45,6 @@
 #'   A string. The full path to the MSPepSearch tool.
 #'
 #' @noRd
-#'
 #==============================================================================#
 .GetExePath <- function(os_arch = NULL) {
   if (is.null(os_arch)) {
@@ -64,4 +62,33 @@
   return(path)
 }
 
+
+
+#==============================================================================#
+#' Validate the 'n_threads' argument
+#'
+#' @description
+#'   Internal helper function to check the \code{n_threads} argument.
+#'   Ensures that \code{n_threads} is a positive integer and does not exceed
+#'   the number of available CPU cores.
+#'
+#' @importFrom parallel detectCores
+#'
+#' @noRd
+#==============================================================================#
+.CheckNumThreads <- function(n_threads) {
+  if (!is.numeric(n_threads) || length(n_threads) != 1L ||
+      abs(n_threads - as.integer(n_threads)) > sqrt(.Machine$double.eps) ||
+      as.integer(n_threads) < 1) {
+    stop("'n_threads' must be an integer value.")
+  }
+  n_detected_threads <- parallel::detectCores()
+  if (n_detected_threads < as.integer(n_threads)) {
+    stop("'n_threads' cannot exceed the number of available threads ",
+         "(", n_detected_threads, ").")
+  } else if (n_detected_threads == as.integer(n_threads)) {
+    warning("'n_threads' equals the total number of available threads.")
+  }
+  return(invisible(NULL))
+}
 

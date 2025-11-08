@@ -2,9 +2,10 @@
 .Rhistory
 .RData
 .Ruserdata
-.Rbuildignore
 *.Rproj
 
 data-raw
 _local
 archive
+/doc/
+/Meta/

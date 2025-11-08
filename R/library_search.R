@@ -28,6 +28,10 @@
 #'     c("C:/NIST23/MSSEARCH/mainlib/",
 #'       "C:/NIST23/MSSEARCH/replib/")
 #'   }
+#' @param n_threads
+#'   An integer value. Number of parallel threads to use for computation.
+#'   External process parallelization is employed, where each R worker launches
+#'   an independent CLI call.
 #' @param presearch
 #'   A string or a list. The presearch routine applies simple algorithms to
 #'   reduce the search space and significantly speed up search times. However,
@@ -69,8 +73,8 @@
 #'       }
 #'     }
 #'     \item{InChIKey}{Restrict search to only molecules with the first segment
-#'     (i.e., \code{n_segments = 1L}) of the InChIKey being the same as that of the
-#'     search spectrum. Use this presearch when the chemical structure or
+#'     (i.e., \code{n_segments = 1L}) of the InChIKey being the same as that of
+#'     the search spectrum. Use this presearch when the chemical structure or
 #'     InChIKey of the search spectrum is known. To use this presearch, a
 #'     library must be indexed by InChIKey. An older library may be indexed by
 #'     selecting (Re)Index InChIKey from the Tools menu of the MS Search (NIST)
@@ -198,7 +202,7 @@
 #'                                      best_hits_only = TRUE)
 #'
 #'   # Printing the top three rows of the first hitlist
-#'   print(hitlists[[1]][1:3, ])
+#'   print(head(hitlists[[1]], 3L))
 #'
 #'   #>        name  mf rmf pss_mf prob formula  mw exact_mass ...
 #'   #> 1  UNDECANE 897 931    897 43.5  C11H24 156    156.188 ...
@@ -206,11 +210,11 @@
 #'   #> 3 TRIDECANE 875 897    896 22.6  C13H28 184    184.219 ...
 #'
 #' @export
-#'
 #==============================================================================#
 IdentitySearchEiNormal <- function(
     spectra,
     libraries,
+    n_threads = 1L,
     presearch = "default",
     n_hits = 100L,
     search_method = "standard",
@@ -219,12 +223,12 @@ IdentitySearchEiNormal <- function(
     mz_min = NULL,
     mz_max = NULL,
     ri_column_type = "stdnp",
-    load_in_memory = FALSE,
+    load_in_memory = TRUE,
     temp_dir = NULL,
     addl_cli_args = NULL
 ) {
 
-  .LibrarySearch(
+  jobs <- .PrepareJobs(
     spectra,
     libraries,
     algorithm = "identity_normal",
@@ -241,8 +245,10 @@ IdentitySearchEiNormal <- function(
     ri_column_type = ri_column_type,
     load_in_memory = load_in_memory,
     temp_dir = temp_dir,
+    n_threads = n_threads,
     addl_cli_args = addl_cli_args
   )
+  return(.ExecuteJobs(jobs, n_threads))
 }
 
 
@@ -270,11 +276,11 @@ IdentitySearchEiNormal <- function(
 #' @inherit IdentitySearchEiNormal note
 #'
 #' @noRd
-#'
 #==============================================================================#
 IdentitySearchEiQuick <- function(
     spectra,
     libraries,
+    n_threads = 1L,
     presearch = "default",
     n_hits = 100L,
     search_method = "standard",
@@ -283,12 +289,12 @@ IdentitySearchEiQuick <- function(
     mz_min = NULL,
     mz_max = NULL,
     ri_column_type = "stdnp",
-    load_in_memory = FALSE,
+    load_in_memory = TRUE,
     temp_dir = NULL,
     addl_cli_args = NULL
 ) {
 
-  .LibrarySearch(
+  jobs <- .PrepareJobs(
     spectra,
     libraries,
     algorithm = "identity_quick",
@@ -305,8 +311,10 @@ IdentitySearchEiQuick <- function(
     ri_column_type = ri_column_type,
     load_in_memory = load_in_memory,
     temp_dir = temp_dir,
+    n_threads = n_threads,
     addl_cli_args = addl_cli_args
   )
+  return(.ExecuteJobs(jobs, n_threads))
 }
 
 
@@ -316,8 +324,8 @@ IdentitySearchEiQuick <- function(
 #'
 #' @description
 #'   Perform library searches against electron ionization mass spectral
-#'   databases using the 'Identity HiRes NoPrecursor' (also known as ‘Identity
-#'   In-source HiRes’) algorithm.
+#'   databases using the 'Identity HiRes NoPrecursor' (also known as 'Identity
+#'   In-source HiRes') algorithm.
 #'
 #'   Identity HiRes No Precursor (Formerly named In-source/EI with accurate ion
 #'   m/z) - Searches for an HiRes No Precursor or MS/MS spectrum in a library
@@ -375,7 +383,7 @@ IdentitySearchEiQuick <- function(
 #'                                     best_hits_only = TRUE)
 #'
 #'   # Printing the top three rows of the first hitlist
-#'   print(hitlists[[1]][1:3, ])
+#'   print(head(hitlists[[1]], 3L))
 #'
 #'   #>                        name score dot rdot pss_dot prob  formula  mw ...
 #'   #> 1 Hexachlorocyclopentadiene   830 862  879     876 98.6    C5Cl6 270 ...
@@ -383,11 +391,11 @@ IdentitySearchEiQuick <- function(
 #'   #> 3     2,4,6-Trichlorophenol    57 217  309     372  0.1 C6H3Cl3O 196 ...
 #'
 #' @export
-#'
 #==============================================================================#
 IdentitySearchHighRes <- function(
     spectra,
     libraries,
+    n_threads = 1L,
     presearch = "default",
     mz_tolerance = list(value = 0.01, units = "mz"),
     n_hits = 100L,
@@ -397,7 +405,7 @@ IdentitySearchHighRes <- function(
     mz_min = NULL,
     mz_max = NULL,
     ri_column_type = "stdnp",
-    load_in_memory = FALSE,
+    load_in_memory = TRUE,
     temp_dir = NULL,
     addl_cli_args = NULL
 ) {
@@ -405,7 +413,7 @@ IdentitySearchHighRes <- function(
   if (is.null(mz_tolerance)) {
     stop("'mz_tolerance' must be a list of two elements")
   }
-  .LibrarySearch(
+  jobs <- .PrepareJobs(
     spectra,
     libraries,
     algorithm = "identity_hires",
@@ -421,8 +429,10 @@ IdentitySearchHighRes <- function(
     ri_column_type = ri_column_type,
     load_in_memory = load_in_memory,
     temp_dir = temp_dir,
+    n_threads = n_threads,
     addl_cli_args = addl_cli_args
   )
+  return(.ExecuteJobs(jobs, n_threads))
 }
 
 
@@ -492,40 +502,46 @@ IdentitySearchHighRes <- function(
 #'                           package = "mspepsearchr")
 #'
 #'   # Library searching
-#'   hitlists <- IdentitySearchMsMs(msp_path, lib_path, best_hits_only = TRUE)
+#'   hitlists <- IdentitySearchMsMs(
+#'     spectra = msp_path,
+#'     libraries = lib_path,
+#'     best_hits_only = TRUE,
+#'     precursor_ion_tol = list(value = 0.1, utits = "mz"),
+#'     product_ions_tol = list(value = 0.01, units = "mz")
+#'   )
 #'
 #'   # Printing the top three rows of the first hitlist
-#'   print(hitlists[[1]][1:3, ])
+#'   print(head(hitlists[[2]], 3L))
 #'
-#'   #>                               name score dot rdot pss_dot prob ...
-#'   #> 1                     Testosterone   197 700  802     729 73.2 ...
-#'   #> 2 N-(3-Indolylacetyl)-L-isoleucine   138 500  684     552 13.4 ...
-#'   #> 3                   Norfludiazepam   115 430  467     612  6.7 ...
+#'   #>                            name score dot rdot pss_dot prob ...
+#'   #> 1                  Testosterone   920 957  972     965   99 ...
+#'   #> 2               Epitestosterone   583 762  813     794    1 ...
+#'   #> 3 Dehydroepiandrosterone (DHEA)   192 366  398     451    0 ...
 #'
 #' @export
-#'
 #==============================================================================#
 IdentitySearchMsMs <- function(
     spectra,
     libraries,
+    n_threads = 1L,
     presearch = "default",
-    precursor_ion_tol = list(value = 1.6, utits = "mz"),
-    product_ions_tol = list(value = 0.6, units = "mz"),
-    ignore_precursor_ion_tol = NULL,
+    precursor_ion_tol = list(value = 20, utits = "ppm"),
+    product_ions_tol = list(value = 0.01, units = "mz"),
+    ignore_precursor_ion_tol = list(value = 1.6, units = "mz"),
     n_hits = 100L,
     search_method = "standard",
     best_hits_only = FALSE,
     min_abundance = 1L,
     mz_min = NULL,
     mz_max = NULL,
-    load_in_memory = FALSE,
+    load_in_memory = TRUE,
     temp_dir = NULL,
     addl_cli_args = NULL) {
 
   if (presearch == "default") {
     presearch <- "default_msms"
   }
-  .LibrarySearch(
+  jobs <- .PrepareJobs(
     spectra,
     libraries,
     algorithm = "identity_msms",
@@ -545,8 +561,10 @@ IdentitySearchMsMs <- function(
     mz_max = mz_max,
     load_in_memory = load_in_memory,
     temp_dir = temp_dir,
+    n_threads = n_threads,
     addl_cli_args = addl_cli_args
   )
+  return(.ExecuteJobs(jobs, n_threads))
 }
 
 
@@ -605,7 +623,7 @@ IdentitySearchMsMs <- function(
 #'                                        best_hits_only = TRUE)
 #'
 #'   # Printing the top three rows of the first hitlist
-#'   print(hitlists[[1]][1:3, ])
+#'   print(head(hitlists[[1]], 3L))
 #'
 #'   #>        name  mf rmf pss_mf formula  mw exact_mass ...
 #'   #>    UNDECANE 945 961    948  C11H24 156    156.188 ...
@@ -613,11 +631,11 @@ IdentitySearchMsMs <- function(
 #'   #> TETRADECANE 917 945    939  C14H30 198    198.235 ...
 #'
 #' @export
-#'
 #==============================================================================#
 SimilaritySearchEiSimple <- function(
     spectra,
     libraries,
+    n_threads = 1L,
     presearch = "default",
     n_hits = 100L,
     search_method = "standard",
@@ -626,12 +644,12 @@ SimilaritySearchEiSimple <- function(
     mz_min = NULL,
     mz_max = NULL,
     ri_column_type = "stdnp",
-    load_in_memory = FALSE,
+    load_in_memory = TRUE,
     temp_dir = NULL,
     addl_cli_args = NULL
 ) {
 
-  .LibrarySearch(
+  jobs <- .PrepareJobs(
     spectra,
     libraries,
     algorithm = "similarity_simple",
@@ -649,8 +667,10 @@ SimilaritySearchEiSimple <- function(
     ri_column_type = ri_column_type,
     load_in_memory = load_in_memory,
     temp_dir = temp_dir,
+    n_threads = n_threads,
     addl_cli_args = addl_cli_args
   )
+  return(.ExecuteJobs(jobs, n_threads))
 }
 
 
@@ -713,7 +733,7 @@ SimilaritySearchEiSimple <- function(
 #'                                             best_hits_only = TRUE)
 #'
 #'   # Printing the top three rows of the first hitlist
-#'   print(hitlists[[1]][1:3, ])
+#'   print(head(hitlists[[1]], 3L))
 #'
 #'   #>        name  mf rmf pss_mf deltamass formula  mw exact_mass ...
 #'   #> 1  UNDECANE 945 961    948         0  C11H24 156    156.188 ...
@@ -721,11 +741,11 @@ SimilaritySearchEiSimple <- function(
 #'   #> 3 TRIDECANE 815 912    815       -28  C13H28 184    184.219 ...
 #'
 #' @export
-#'
 #==============================================================================#
 SimilaritySearchEiNeutralLoss <- function(
     spectra,
     libraries,
+    n_threads = 1L,
     presearch = "default",
     nominal_mw = NULL,
     n_hits = 100L,
@@ -735,12 +755,12 @@ SimilaritySearchEiNeutralLoss <- function(
     mz_min = NULL,
     mz_max = NULL,
     ri_column_type = "stdnp",
-    load_in_memory = FALSE,
+    load_in_memory = TRUE,
     temp_dir = NULL,
     addl_cli_args = NULL
 ) {
 
-  .LibrarySearch(
+  jobs <- .PrepareJobs(
     spectra,
     libraries,
     algorithm = "similarity_neutral_loss",
@@ -758,8 +778,10 @@ SimilaritySearchEiNeutralLoss <- function(
     ri_column_type = ri_column_type,
     load_in_memory = load_in_memory,
     temp_dir = temp_dir,
+    n_threads = n_threads,
     addl_cli_args = addl_cli_args
   )
+  return(.ExecuteJobs(jobs, n_threads))
 }
 
 
@@ -821,7 +843,7 @@ SimilaritySearchEiNeutralLoss <- function(
 #'                                        best_hits_only = TRUE)
 #'
 #'   # Printing the top three rows of the first hitlist
-#'   print(hitlists[[1]][1:3, ])
+#'   print(head(hitlists[[1]], 3L))
 #'
 #'   #>          name  mf rmf pss_mf deltamass formula  mw exact_mass ...
 #'   #> 1   TRIDECANE 945 975    945  -28.0313  C13H28 184    184.219 ...
@@ -829,11 +851,11 @@ SimilaritySearchEiNeutralLoss <- function(
 #'   #> 3    UNDECANE 945 961    948    0.0000  C11H24 156    156.188 ...
 #'
 #' @export
-#'
 #==============================================================================#
 SimilaritySearchEiHybrid <- function(
     spectra,
     libraries,
+    n_threads = 1L,
     presearch = "default",
     nominal_mw = NULL,
     n_hits = 100L,
@@ -843,12 +865,12 @@ SimilaritySearchEiHybrid <- function(
     mz_min = NULL,
     mz_max = NULL,
     ri_column_type = "stdnp",
-    load_in_memory = FALSE,
+    load_in_memory = TRUE,
     temp_dir = NULL,
     addl_cli_args = NULL
 ) {
 
-  .LibrarySearch(
+  jobs <- .PrepareJobs(
     spectra,
     libraries,
     algorithm = "similarity_hybrid",
@@ -866,8 +888,10 @@ SimilaritySearchEiHybrid <- function(
     ri_column_type = ri_column_type,
     load_in_memory = load_in_memory,
     temp_dir = temp_dir,
+    n_threads = n_threads,
     addl_cli_args = addl_cli_args
   )
+  return(.ExecuteJobs(jobs, n_threads))
 }
 
 
@@ -922,7 +946,7 @@ SimilaritySearchEiHybrid <- function(
 #'                                        best_hits_only = TRUE)
 #'
 #'   # Printing the top three rows of the first hitlist
-#'   print(hitlists[[1]][1:3, ])
+#'   print(head(hitlists[[1]], 3L))
 #'
 #'   #>        name  mf rmf pss_mf formula  mw exact_mass ...
 #'   #> 1  DODECANE 262 557    923  C12H26 170    170.203 ...
@@ -930,11 +954,11 @@ SimilaritySearchEiHybrid <- function(
 #'   #> 3 TRIDECANE 242 515    921  C13H28 184    184.219 ...
 #'
 #' @export
-#'
 #==============================================================================#
 SimilaritySearchMsMsInEi <- function(
     spectra,
     libraries,
+    n_threads = 1L,
     presearch = "default",
     nominal_mw = NULL,
     n_hits = 100L,
@@ -943,12 +967,12 @@ SimilaritySearchMsMsInEi <- function(
     min_abundance = 1L,
     mz_min = NULL,
     mz_max = NULL,
-    load_in_memory = FALSE,
+    load_in_memory = TRUE,
     temp_dir = NULL,
     addl_cli_args = NULL
 ) {
 
-  .LibrarySearch(
+  jobs <- .PrepareJobs(
     spectra,
     libraries,
     algorithm = "similarity_msms_in_ei",
@@ -965,8 +989,10 @@ SimilaritySearchMsMsInEi <- function(
     mz_max = mz_max,
     load_in_memory = load_in_memory,
     temp_dir = temp_dir,
+    n_threads = n_threads,
     addl_cli_args = addl_cli_args
   )
+  return(.ExecuteJobs(jobs, n_threads))
 }
 
 
@@ -1040,22 +1066,22 @@ SimilaritySearchMsMsInEi <- function(
 #'                                          best_hits_only = TRUE)
 #'
 #'   # Printing the top three rows of the first hitlist
-#'   print(hitlists[[1]][1:3, ])
+#'   print(head(hitlists[[2]], 3L))
 #'
 #'   #>                      name score dot rdot pss_dot deltamass  formula ...
-#'   #> 1           Norethindrone   260 710  788     762  -10.0696 C20H26O2 ...
-#'   #> 2            Progesterone   260 707  778     792  -26.1009 C21H30O2 ...
-#'   #> 3 4-Androstene-3,17-dione   246 698  791     777    1.9304 C19H26O2 ...
+#'   #> 1            Testosterone   959 965  976     970    0.0000 C19H28O2 ...
+#'   #> 2 4-Androstene-3,17-dione   951 957  970     962    2.0156 C19H26O2 ...
+#'   #> 3            Progesterone   935 955  958     980  -26.0157 C21H30O2 ...
 #'
 #' @export
-#'
 #==============================================================================#
 SimilaritySearchMsmsHybrid <- function(
     spectra,
     libraries,
+    n_threads = 1L,
     presearch = "default",
-    precursor_ion_tol = list(value = 1.6, utits = "mz"),
-    product_ions_tol = list(value = 0.6, units = "mz"),
+    precursor_ion_tol = list(value = 20, utits = "ppm"),
+    product_ions_tol = list(value = 0.01, units = "mz"),
     ignore_precursor_ion_tol = NULL,
     n_hits = 100L,
     search_method = "standard",
@@ -1063,11 +1089,11 @@ SimilaritySearchMsmsHybrid <- function(
     min_abundance = 1L,
     mz_min = NULL,
     mz_max = NULL,
-    load_in_memory = FALSE,
+    load_in_memory = TRUE,
     temp_dir = NULL,
     addl_cli_args = NULL) {
 
-  .LibrarySearch(
+  jobs <- .PrepareJobs(
     spectra,
     libraries,
     algorithm = "similarity_msms_hybrid",
@@ -1087,8 +1113,10 @@ SimilaritySearchMsmsHybrid <- function(
     mz_max = mz_max,
     load_in_memory = load_in_memory,
     temp_dir = temp_dir,
+    n_threads = n_threads,
     addl_cli_args = addl_cli_args
   )
+  return(.ExecuteJobs(jobs, n_threads))
 }
 
 

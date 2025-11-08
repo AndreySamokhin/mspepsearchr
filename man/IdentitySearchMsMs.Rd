@@ -7,17 +7,18 @@
 IdentitySearchMsMs(
   spectra,
   libraries,
+  n_threads = 1L,
   presearch = "default",
-  precursor_ion_tol = list(value = 1.6, utits = "mz"),
-  product_ions_tol = list(value = 0.6, units = "mz"),
-  ignore_precursor_ion_tol = NULL,
+  precursor_ion_tol = list(value = 20, utits = "ppm"),
+  product_ions_tol = list(value = 0.01, units = "mz"),
+  ignore_precursor_ion_tol = list(value = 1.6, units = "mz"),
   n_hits = 100L,
   search_method = "standard",
   best_hits_only = FALSE,
   min_abundance = 1L,
   mz_min = NULL,
   mz_max = NULL,
-  load_in_memory = FALSE,
+  load_in_memory = TRUE,
   temp_dir = NULL,
   addl_cli_args = NULL
 )
@@ -39,6 +40,10 @@ libraries:
   c("C:/NIST23/MSSEARCH/mainlib/",
     "C:/NIST23/MSSEARCH/replib/")
 }}
+
+\item{n_threads}{An integer value. Number of parallel threads to use for computation.
+External process parallelization is employed, where each R worker launches
+an independent CLI call.}
 
 \item{presearch}{A string or a list. The presearch routine applies simple algorithms to
 reduce the search space and significantly speed up search times. However,
@@ -80,8 +85,8 @@ that closely match may sometimes be excluded.
     }
   }
   \item{InChIKey}{Restrict search to only molecules with the first segment
-  (i.e., \code{n_segments = 1L}) of the InChIKey being the same as that of the
-  search spectrum. Use this presearch when the chemical structure or
+  (i.e., \code{n_segments = 1L}) of the InChIKey being the same as that of
+  the search spectrum. Use this presearch when the chemical structure or
   InChIKey of the search spectrum is known. To use this presearch, a
   library must be indexed by InChIKey. An older library may be indexed by
   selecting (Re)Index InChIKey from the Tools menu of the MS Search (NIST)
@@ -218,14 +223,20 @@ This documentation includes content adapted from the official MS Search
                           package = "mspepsearchr")
 
   # Library searching
-  hitlists <- IdentitySearchMsMs(msp_path, lib_path, best_hits_only = TRUE)
+  hitlists <- IdentitySearchMsMs(
+    spectra = msp_path,
+    libraries = lib_path,
+    best_hits_only = TRUE,
+    precursor_ion_tol = list(value = 0.1, utits = "mz"),
+    product_ions_tol = list(value = 0.01, units = "mz")
+  )
 
   # Printing the top three rows of the first hitlist
-  print(hitlists[[1]][1:3, ])
+  print(head(hitlists[[2]], 3L))
 
-  #>                               name score dot rdot pss_dot prob ...
-  #> 1                     Testosterone   197 700  802     729 73.2 ...
-  #> 2 N-(3-Indolylacetyl)-L-isoleucine   138 500  684     552 13.4 ...
-  #> 3                   Norfludiazepam   115 430  467     612  6.7 ...
+  #>                            name score dot rdot pss_dot prob ...
+  #> 1                  Testosterone   920 957  972     965   99 ...
+  #> 2               Epitestosterone   583 762  813     794    1 ...
+  #> 3 Dehydroepiandrosterone (DHEA)   192 366  398     451    0 ...
 
 }

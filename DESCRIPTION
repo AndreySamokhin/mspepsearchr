@@ -1,7 +1,7 @@
 Type: Package
 Package: mspepsearchr
 Title: Batch Mass Spectral Library Searches Using the MSPepSearch (NIST) Tool
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: person("Andrey", "Samokhin", , "andrey.s.samokhin@gmail.com",
                   role = c("aut", "cre", "cph"),
                   comment = c(ORCID = "0000-0003-0223-6087"))
@@ -18,7 +18,8 @@ LazyData: true
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Imports: 
     mssearchr,
+    parallel,
     utils

@@ -21,11 +21,10 @@
 #' @importFrom utils read.table
 #'
 #' @noRd
-#'
 #==============================================================================#
-ParseOutputFile <- function(input_file,
-                            rm_empty_cols = TRUE,
-                            comments = NULL) {
+.ParseOutputFile <- function(input_file,
+                             rm_empty_cols = TRUE,
+                             comments = NULL) {
 
   #--[ Check input arguments ]--------------------------------------------------
 
@@ -199,11 +198,8 @@ ParseOutputFile <- function(input_file,
 
   # It is needed to empty hitlists and replace 'NA' values.
   df$rank[is.na(df$rank)] <- -1L
-
-  # 'which(diff(df$rank) != 1L)' does not work for '/OutBestHitsOnly'
-  temp <- which(diff(df$rank) < 1L)
-  first_idxs <- c(1L, temp + 1L)
-  last_idxs <- c(temp, nrow(df))
+  first_idxs <- which(df$rank <= 1L)
+  last_idxs <- c(first_idxs[-1L] - 1L, nrow(df))
 
   hitlists <- lapply(seq_along(first_idxs), function(a1) {
     row_idxs <- seq(first_idxs[[a1]], last_idxs[[a1]])
@@ -240,7 +236,7 @@ ParseOutputFile <- function(input_file,
   attr(hitlists, "cli") <- list(start_message = start_message,
                                 end_message = end_message,
                                 call_cmd = call_cmd,
-                                output_file = normalizePath(input_file))
+                                file_path = normalizePath(input_file))
   attr(hitlists, "comments") <- comments
   return(invisible(hitlists))
 }

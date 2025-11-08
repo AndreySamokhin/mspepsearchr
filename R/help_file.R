@@ -9,7 +9,6 @@
 #'   Return \code{NULL}.
 #'
 #' @export
-#'
 #==============================================================================#
 OpenHelpFile <- function() {
   help_file <-
@@ -33,7 +32,6 @@ OpenHelpFile <- function() {
 #'   Return \code{NULL}.
 #'
 #' @noRd
-#'
 #==============================================================================#
 .OpenTxtFile <- function(txt_file) {
   sys_info <- Sys.info()
