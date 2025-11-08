@@ -39,6 +39,15 @@ install_github("andreysamokhin/mspepsearchr")
 ```
 
 
+## Documentation
+
+The package vignette and reference manual have been pre-rendered and are
+available both locally (in the *doc/* directory) and online:
+
+* [Reference manual][mspepsearchr_manual]  
+* ["Introduction to mspepsearchr" vignette][mspepsearchr-intro_vignette]
+
+
 ## Known Discrepancies Between MS Search and MSPepSearch
 
 Users may observe minor differences in results when using MSPepSearch compared
@@ -61,3 +70,6 @@ numbers, whereas MS Search can also use compound names if CAS numbers are
 unavailable).
 
 
+
+[mspepsearchr_manual]: <https://andreysamokhin.github.io/mspepsearchr/inst/doc/mspepsearchr_0.2.0.pdf>
+[mspepsearchr-intro_vignette]: <https://andreysamokhin.github.io/mspepsearchr/inst/doc/mspepsearchr-intro.html>
