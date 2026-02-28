@@ -14,6 +14,9 @@
 #'   Any R object. Additional information (e.g., library search options, the
 #'   list of libraries used, etc.). It is saved as the 'comments' attribute of
 #'   the returned list.
+#' @param encoding
+#'   A string. Specify the encoding of the output file to correctly extract
+#'   non-ASCII characters from paths.
 #'
 #' @return
 #'   Return a list of data frames. Each data frame represents a hitlist.
@@ -24,7 +27,8 @@
 #==============================================================================#
 .ParseOutputFile <- function(input_file,
                              rm_empty_cols = TRUE,
-                             comments = NULL) {
+                             comments = NULL,
+                             encoding = "unknown") {
 
   #--[ Check input arguments ]--------------------------------------------------
 
@@ -44,10 +48,25 @@
   # 'comments'
   # Any R object can be passed.
 
+  # 'encoding'
+  if (!is.character(encoding) || length(encoding) != 1L) {
+    stop("'encoding' must be a string.")
+  }
+
 
   #--[ Read lines ]-------------------------------------------------------------
 
-  all_lines <- readLines(input_file)
+  if (!(encoding %in% c("unknown", iconvlist()))) {
+    encoding <- "unknown"
+    warning("Invalid encoding specified; using auto-detection instead.")
+  }
+
+  temp <- readLines(input_file, encoding = encoding)
+  if (encoding == "unknown") {
+    all_lines <- iconv(temp, from = "", to = "UTF-8", sub = "byte")
+  } else {
+    all_lines <- iconv(temp, from = encoding, to = "UTF-8")
+  }
 
 
   #--[ Parse comments ]---------------------------------------------------------

@@ -629,6 +629,7 @@
 #'
 #' @param jobs A list of jobs returned by \code{.PrepareJobs()}.
 #' @param n_threads An integer value. Number of threads to use.
+#' @param encoding A string. Encoding of the MSPepSearch output file.
 #'
 #' @return
 #'   Return a list of data frames. Each data frame represents a hit list.
@@ -641,7 +642,8 @@
 #' @noRd
 #==============================================================================#
 .ExecuteJobs <- function(jobs,
-                         n_threads) {
+                         n_threads,
+                         encoding) {
 
   #--[ Check input arguments ]--------------------------------------------------
 
@@ -651,17 +653,22 @@
   # 'n_threads'
   .CheckNumThreads(n_threads)
 
+  # 'encoding'
+  if (!is.character(encoding) || length(encoding) != 1L) {
+    stop("'encoding' must be a string.")
+  }
+
 
   #--[ Execute jobs ]-----------------------------------------------------------
 
   if (n_threads == 1L) {
-    res <- lapply(jobs, .CallAndParse)
+    res <- lapply(jobs, .CallAndParse, encoding = encoding)
   } else if (length(jobs) == n_threads) {
     cl <- parallel::makeCluster(n_threads)
     on.exit(parallel::stopCluster(cl), add = TRUE)
     parallel::clusterExport(cl, c(".CallAndParse", ".ParseOutputFile"),
                             envir = asNamespace("mspepsearchr"))
-    res <- parallel::parLapply(cl, jobs, .CallAndParse)
+    res <- parallel::parLapply(cl, jobs, .CallAndParse, encoding = encoding)
   } else {
     stop("The number of jobs is not equal to the number of threads.")
   }
@@ -686,21 +693,30 @@
 #'
 #' @param job
 #'   A single job descriptor, typically returned by \code{.PrepareJobs()}.
+#' @param encoding
+#'   A string. Encoding of the MSPepSearch output file.
+#' @param os_arch
+#'   A string. The architecture type: \code{"x32"} or \code{"x64"}.
 #'
 #' @return
 #'   A data frame containing the parsed results for the job.
 #'
 #' @noRd
 #==============================================================================#
-.CallAndParse <- function(job, os_arch = NULL) {
+.CallAndParse <- function(job, encoding, os_arch = NULL) {
 
   #--[ Check input arguments ]--------------------------------------------------
 
+  # 'job'
   if (is.null(job$cli_args) | !is.character(job$cli_args) |
       is.null(job$output_file) | !is.character(job$output_file) |
       length(job$output_file) != 1L) {
     stop("'job' is invalid.")
   }
+
+  # 'encoding' is checked elsewhere.
+
+  # 'os_arch' is checked elsewhere.
 
 
   #--[ Call MSPepSearch ]-------------------------------------------------------
@@ -726,7 +742,7 @@
 
   #--[ Output ]-----------------------------------------------------------------
 
-  hitlists <- .ParseOutputFile(job$output_file)
+  hitlists <- .ParseOutputFile(job$output_file, encoding = encoding)
   return(invisible(hitlists))
 }
 

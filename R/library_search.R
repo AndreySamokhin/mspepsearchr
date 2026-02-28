@@ -160,6 +160,12 @@
 #'   argument is duplicated. However, this check is not comprehensive, it does
 #'   not treat aliases as equivalent arguments, nor does it verify that the
 #'   provided arguments are compatible with each other.
+#' @param encoding
+#'   A string specifying the encoding of the MSPepSearch output file. If
+#'   \code{"unknown"} (the default), non-ASCII characters may appear as
+#'   \code{"<xx>"} in printed output, but the data are still processed
+#'   correctly. To display non-ASCII characters properly, specify the
+#'   appropriate encoding.
 #'
 #' @return
 #'   Return a list of data frames. Attributes of the list contain supplementary
@@ -225,7 +231,8 @@ IdentitySearchEiNormal <- function(
     ri_column_type = "stdnp",
     load_in_memory = TRUE,
     temp_dir = NULL,
-    addl_cli_args = NULL
+    addl_cli_args = NULL,
+    encoding = "unknown"
 ) {
 
   jobs <- .PrepareJobs(
@@ -248,7 +255,7 @@ IdentitySearchEiNormal <- function(
     n_threads = n_threads,
     addl_cli_args = addl_cli_args
   )
-  return(.ExecuteJobs(jobs, n_threads))
+  return(.ExecuteJobs(jobs, n_threads = n_threads, encoding = encoding))
 }
 
 
@@ -291,7 +298,8 @@ IdentitySearchEiQuick <- function(
     ri_column_type = "stdnp",
     load_in_memory = TRUE,
     temp_dir = NULL,
-    addl_cli_args = NULL
+    addl_cli_args = NULL,
+    encoding = "unknown"
 ) {
 
   jobs <- .PrepareJobs(
@@ -314,7 +322,7 @@ IdentitySearchEiQuick <- function(
     n_threads = n_threads,
     addl_cli_args = addl_cli_args
   )
-  return(.ExecuteJobs(jobs, n_threads))
+  return(.ExecuteJobs(jobs, n_threads = n_threads, encoding = encoding))
 }
 
 
@@ -407,7 +415,8 @@ IdentitySearchHighRes <- function(
     ri_column_type = "stdnp",
     load_in_memory = TRUE,
     temp_dir = NULL,
-    addl_cli_args = NULL
+    addl_cli_args = NULL,
+    encoding = "unknown"
 ) {
 
   if (is.null(mz_tolerance)) {
@@ -432,7 +441,7 @@ IdentitySearchHighRes <- function(
     n_threads = n_threads,
     addl_cli_args = addl_cli_args
   )
-  return(.ExecuteJobs(jobs, n_threads))
+  return(.ExecuteJobs(jobs, n_threads = n_threads, encoding = encoding))
 }
 
 
@@ -536,7 +545,9 @@ IdentitySearchMsMs <- function(
     mz_max = NULL,
     load_in_memory = TRUE,
     temp_dir = NULL,
-    addl_cli_args = NULL) {
+    addl_cli_args = NULL,
+    encoding = "unknown"
+) {
 
   if (presearch == "default") {
     presearch <- "default_msms"
@@ -564,7 +575,7 @@ IdentitySearchMsMs <- function(
     n_threads = n_threads,
     addl_cli_args = addl_cli_args
   )
-  return(.ExecuteJobs(jobs, n_threads))
+  return(.ExecuteJobs(jobs, n_threads = n_threads, encoding = encoding))
 }
 
 
@@ -646,7 +657,8 @@ SimilaritySearchEiSimple <- function(
     ri_column_type = "stdnp",
     load_in_memory = TRUE,
     temp_dir = NULL,
-    addl_cli_args = NULL
+    addl_cli_args = NULL,
+    encoding = "unknown"
 ) {
 
   jobs <- .PrepareJobs(
@@ -670,7 +682,7 @@ SimilaritySearchEiSimple <- function(
     n_threads = n_threads,
     addl_cli_args = addl_cli_args
   )
-  return(.ExecuteJobs(jobs, n_threads))
+  return(.ExecuteJobs(jobs, n_threads = n_threads, encoding = encoding))
 }
 
 
@@ -757,7 +769,8 @@ SimilaritySearchEiNeutralLoss <- function(
     ri_column_type = "stdnp",
     load_in_memory = TRUE,
     temp_dir = NULL,
-    addl_cli_args = NULL
+    addl_cli_args = NULL,
+    encoding = "unknown"
 ) {
 
   jobs <- .PrepareJobs(
@@ -781,7 +794,7 @@ SimilaritySearchEiNeutralLoss <- function(
     n_threads = n_threads,
     addl_cli_args = addl_cli_args
   )
-  return(.ExecuteJobs(jobs, n_threads))
+  return(.ExecuteJobs(jobs, n_threads = n_threads, encoding = encoding))
 }
 
 
@@ -867,7 +880,8 @@ SimilaritySearchEiHybrid <- function(
     ri_column_type = "stdnp",
     load_in_memory = TRUE,
     temp_dir = NULL,
-    addl_cli_args = NULL
+    addl_cli_args = NULL,
+    encoding = "unknown"
 ) {
 
   jobs <- .PrepareJobs(
@@ -891,7 +905,7 @@ SimilaritySearchEiHybrid <- function(
     n_threads = n_threads,
     addl_cli_args = addl_cli_args
   )
-  return(.ExecuteJobs(jobs, n_threads))
+  return(.ExecuteJobs(jobs, n_threads = n_threads, encoding = encoding))
 }
 
 
@@ -969,7 +983,8 @@ SimilaritySearchMsMsInEi <- function(
     mz_max = NULL,
     load_in_memory = TRUE,
     temp_dir = NULL,
-    addl_cli_args = NULL
+    addl_cli_args = NULL,
+    encoding = "unknown"
 ) {
 
   jobs <- .PrepareJobs(
@@ -992,7 +1007,7 @@ SimilaritySearchMsMsInEi <- function(
     n_threads = n_threads,
     addl_cli_args = addl_cli_args
   )
-  return(.ExecuteJobs(jobs, n_threads))
+  return(.ExecuteJobs(jobs, n_threads = n_threads, encoding = encoding))
 }
 
 
@@ -1091,7 +1106,9 @@ SimilaritySearchMsmsHybrid <- function(
     mz_max = NULL,
     load_in_memory = TRUE,
     temp_dir = NULL,
-    addl_cli_args = NULL) {
+    addl_cli_args = NULL,
+    encoding = "unknown"
+) {
 
   jobs <- .PrepareJobs(
     spectra,
@@ -1116,7 +1133,7 @@ SimilaritySearchMsmsHybrid <- function(
     n_threads = n_threads,
     addl_cli_args = addl_cli_args
   )
-  return(.ExecuteJobs(jobs, n_threads))
+  return(.ExecuteJobs(jobs, n_threads = n_threads, encoding = encoding))
 }
 
 

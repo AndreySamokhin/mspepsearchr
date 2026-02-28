@@ -408,4 +408,13 @@ test_that("Library search, spaces in file paths", {
   )
 })
 
+test_that("Library search, non-ASCII paths", {
+  msp_input_file <-
+    normalizePath(file.path(temp_dir, "спектр.msp"), mustWork = FALSE)
+  writeLines(dummy_spectrum, msp_input_file, useBytes = FALSE)
+  expect_no_error(
+    SimilaritySearchEiSimple(msp_input_file, lib_path, temp_dir = temp_dir)
+  )
+})
+
 
