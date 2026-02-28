@@ -390,3 +390,22 @@ expect_error(
 })
 
 
+
+#==[ Fixed bugs ]===============================================================
+
+lib_path <- system.file("extdata/libraries/massbank_subset_ei_lr/",
+                        package = "mspepsearchr")
+dummy_spectrum <-
+  c("name: dummy alkane", "num peaks: 3", "57 999", "71 500", "85 300", "")
+
+
+test_that("Library search, spaces in file paths", {
+  msp_input_file <-
+    normalizePath(file.path(temp_dir, "file with space.msp"), mustWork = FALSE)
+  writeLines(dummy_spectrum, msp_input_file, useBytes = FALSE)
+  expect_no_error(
+    SimilaritySearchEiSimple(msp_input_file, lib_path, temp_dir = temp_dir)
+  )
+})
+
+

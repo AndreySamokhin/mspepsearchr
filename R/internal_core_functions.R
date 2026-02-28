@@ -513,11 +513,12 @@
   #--[ CLI arguments (mass spectral libraries) ]--------------------------------
 
   libraries <- normalizePath(libraries)
+  quoted_libraries <- shQuote(libraries)
 
   #.. MainLib, /MAIN ...........................................................
   mainlib_idx <- which(tolower(basename(libraries)) == "mainlib")
   if (length(mainlib_idx) == 1L) {
-    cli_args$libs <- c(cli_args$libs, "/MAIN", libraries[[mainlib_idx]])
+    cli_args$libs <- c(cli_args$libs, "/MAIN", quoted_libraries[[mainlib_idx]])
   } else if (length(mainlib_idx) > 1L) {
     stop("Several 'mainlib' libraries are specified.")
   }
@@ -525,7 +526,7 @@
   #.. RepLib, /REPL ............................................................
   replib_idx <- which(tolower(basename(libraries)) == "replib")
   if (length(replib_idx) == 1L) {
-    cli_args$libs <- c(cli_args$libs, "/REPL", libraries[[replib_idx]])
+    cli_args$libs <- c(cli_args$libs, "/REPL", quoted_libraries[[replib_idx]])
   } else if (length(replib_idx) > 1L) {
     stop("Several 'replib' libraries are specified.")
   }
@@ -533,7 +534,7 @@
   #.. Other libraries, /LIB ....................................................
   lib_idxs <- which(!(tolower(basename(libraries)) %in% c("mainlib", "replib")))
   for (i in lib_idxs) {
-    cli_args$libs <- c(cli_args$libs, "/LIB", libraries[[i]])
+    cli_args$libs <- c(cli_args$libs, "/LIB", quoted_libraries[[i]])
   }
 
 
@@ -607,8 +608,8 @@
     cli_args <- c(cli_args$encoded,
                   cli_args$params,
                   cli_args$libs,
-                  "/INP", input_file,
-                  "/OUTTAB", output_file,
+                  "/INP", shQuote(input_file),
+                  "/OUTTAB", shQuote(output_file),
                   cli_args$output,
                   cli_args$addl)
     return(list(cli_args = cli_args, output_file = output_file))
@@ -712,7 +713,8 @@
   if (.Platform$OS.type == "windows") {
     err_code <- system2(exe_path, args = job$cli_args, stderr = NULL)
   } else if (.Platform$OS.type == "unix") {
-    err_code <- system2("wine", args = c(exe_path, job$cli_args), stderr = NULL)
+    err_code <-
+      system2("wine", args = c(shQuote(exe_path), job$cli_args), stderr = NULL)
   } else {
     stop("Only Windows or Unix-like OS (with Wine installed) are supported.")
   }
