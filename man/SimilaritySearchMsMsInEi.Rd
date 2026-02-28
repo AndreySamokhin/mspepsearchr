@@ -18,7 +18,8 @@ SimilaritySearchMsMsInEi(
   mz_max = NULL,
   load_in_memory = TRUE,
   temp_dir = NULL,
-  addl_cli_args = NULL
+  addl_cli_args = NULL,
+  encoding = "unknown"
 )
 }
 \arguments{
@@ -162,6 +163,12 @@ only a basic check is performed: an error is returned if a specific
 argument is duplicated. However, this check is not comprehensive, it does
 not treat aliases as equivalent arguments, nor does it verify that the
 provided arguments are compatible with each other.}
+
+\item{encoding}{A string specifying the encoding of the MSPepSearch output file. If
+\code{"unknown"} (the default), non-ASCII characters may appear as
+\code{"<xx>"} in printed output, but the data are still processed
+correctly. To display non-ASCII characters properly, specify the
+appropriate encoding.}
 }
 \value{
 Return a list of data frames. Attributes of the list contain supplementary

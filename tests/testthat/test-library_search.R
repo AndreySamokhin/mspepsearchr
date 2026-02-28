@@ -361,7 +361,7 @@ test_that("Library search, 'load_in_memory' argument", {
 test_that("Library search, 'n_threads' argument", {
   skip_on_ci()
   n_threads <- parallel::detectCores()
-  skip_if(n_threads < 2L, "Skipping: fewer than 2 threads available.")
+  skip_if(n_threads < 3L, "Skipping: fewer than 3 threads available.")
 
   hl <- IdentitySearchEiNormal(msp_file, lib_path, n_threads = 2L)
   expect_identical(hl, res_identity, ignore_attr = TRUE)
@@ -387,6 +387,45 @@ expect_error(
                          addl_cli_args = c("/OutMW", "/OutCAS")),
   "The following CLI flags are duplicated: /OutMW, /OutCAS"
 )
+})
+
+
+
+#==[ Fixed bugs ]===============================================================
+
+lib_path <- system.file("extdata/libraries/massbank_subset_ei_lr/",
+                        package = "mspepsearchr")
+dummy_spectrum <-
+  c("name: dummy alkane", "num peaks: 3", "57 999", "71 500", "85 300", "")
+
+
+test_that("Library search, spaces in file paths", {
+  msp_input_file <-
+    normalizePath(file.path(temp_dir, "file with space.msp"), mustWork = FALSE)
+  writeLines(dummy_spectrum, msp_input_file, useBytes = FALSE)
+  expect_no_error(
+    SimilaritySearchEiSimple(msp_input_file, lib_path, temp_dir = temp_dir)
+  )
+})
+
+test_that("Library search, non-ASCII paths", {
+  if (.Platform$OS.type == "unix") {
+    old_lang <- Sys.getenv("LANG", unset = NA)
+    Sys.setenv(LANG = "ru_RU.UTF-8")
+    on.exit({
+      if (is.na(old_lang)) {
+        Sys.unsetenv("LANG")
+      } else {
+        Sys.setenv(LANG = old_lang)
+      }
+    }, add = TRUE)
+  }
+  msp_input_file <-
+    normalizePath(file.path(temp_dir, "спектр.msp"), mustWork = FALSE)
+  writeLines(dummy_spectrum, msp_input_file, useBytes = FALSE)
+  expect_no_error(
+    SimilaritySearchEiSimple(msp_input_file, lib_path, temp_dir = temp_dir)
+  )
 })
 
 
