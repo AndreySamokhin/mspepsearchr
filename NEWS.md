@@ -1,5 +1,11 @@
 # mspepsearchr
 
+## mspepsearchr 0.2.1
+
+* Fixed errors caused by spaces or non-ASCII characters in file paths (closes
+#1).
+
+
 ## mspepsearchr 0.2.0
 
 * Added external process parallelization using the `parallel` package.
