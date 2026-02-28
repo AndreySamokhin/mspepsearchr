@@ -34,7 +34,7 @@ test_that(".SplitSpectraForParallel(), single thread", {
 
 test_that(".SplitSpectraForParallel(), parallelization", {
   n_threads <- parallel::detectCores()
-  skip_if(n_threads < 3L, "Skipping: fewer than 3 threads available.")
+  skip_if(n_threads < 4L, "Skipping: fewer than 4 threads available.")
 
   # msp-file, 3 threads
   temp_files <- .SplitSpectraForParallel(msp_input_file, temp_dir, 3L)

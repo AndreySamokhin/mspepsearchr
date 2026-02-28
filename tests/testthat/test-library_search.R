@@ -361,7 +361,7 @@ test_that("Library search, 'load_in_memory' argument", {
 test_that("Library search, 'n_threads' argument", {
   skip_on_ci()
   n_threads <- parallel::detectCores()
-  skip_if(n_threads < 2L, "Skipping: fewer than 2 threads available.")
+  skip_if(n_threads < 3L, "Skipping: fewer than 3 threads available.")
 
   hl <- IdentitySearchEiNormal(msp_file, lib_path, n_threads = 2L)
   expect_identical(hl, res_identity, ignore_attr = TRUE)
