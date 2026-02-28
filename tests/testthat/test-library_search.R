@@ -409,6 +409,17 @@ test_that("Library search, spaces in file paths", {
 })
 
 test_that("Library search, non-ASCII paths", {
+  if (.Platform$OS.type == "unix") {
+    old_lang <- Sys.getenv("LANG", unset = NA)
+    Sys.setenv(LANG = "ru_RU.UTF-8")
+    on.exit({
+      if (is.na(old_lang)) {
+        Sys.unsetenv("LANG")
+      } else {
+        Sys.setenv(LANG = old_lang)
+      }
+    }, add = TRUE)
+  }
   msp_input_file <-
     normalizePath(file.path(temp_dir, "спектр.msp"), mustWork = FALSE)
   writeLines(dummy_spectrum, msp_input_file, useBytes = FALSE)
