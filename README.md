@@ -33,7 +33,7 @@ executables).
 ## Installation
 
 ``` r
-# Install 'mssearchr' from GitHub:
+# Install 'mspepsearchr' from GitHub:
 library(devtools)
 install_github("andreysamokhin/mspepsearchr")
 ```
